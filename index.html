@@ -61,6 +61,16 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
 .dpad button{border-radius:14px;font-size:1.2rem}
 #talk{background:rgba(47,107,87,.6);background:color-mix(in srgb,var(--accent) 55%,transparent);font-weight:700}
 .dpad button:active,#talk:active{background:rgba(255,255,255,.4)}
+@media (max-width:760px) and (orientation:portrait){
+ .stage{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 12px}.cvw{display:contents}
+ #c{grid-column:1/-1;grid-row:1}#msg{grid-column:1/-1;grid-row:2;min-height:36px}
+ .dpad{position:static;grid-row:3;grid-column:1;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(2,60px);gap:8px}
+ #talk{position:static;grid-row:3;grid-column:2;justify-self:end;align-self:center;width:104px;height:104px}
+ .dpad button,#talk{background:var(--card);color:var(--fg);border:1px solid var(--line);box-shadow:0 3px 0 var(--line);-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none}
+ #talk{background:var(--accent);color:var(--accent-fg);border:none;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+ .dpad button:active{background:var(--line);transform:translateY(2px);box-shadow:none}#talk:active{background:var(--accent);filter:brightness(.9);transform:translateY(2px);box-shadow:none}
+}
+@media (max-width:760px) and (orientation:portrait) and (max-height:700px){.dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px)}#talk{width:84px;height:84px}}
 @media (min-width:761px) and (min-height:561px){
  .app{max-width:1600px}.game{grid-template-columns:minmax(0,1fr) minmax(300px,380px)}
  #c{width:min(100%,calc((100dvh - 130px)*1.4286));margin-inline:auto}.stage{align-items:stretch}
@@ -74,12 +84,19 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
  .side{position:fixed;z-index:10;top:0;right:0;bottom:0;width:min(360px,52vw);height:auto;max-height:none;padding:10px 12px;padding-right:calc(12px + env(safe-area-inset-right,0px));background:var(--bg);background:color-mix(in srgb,var(--bg) 76%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.35);transform:translateX(105%);transition:transform .2s}
  .side.open{transform:none}
 }
-#pc .pcwin{--bg:#14201d;--card:#1b2a26;--fg:#e4ede9;--line:#3d504a;--accent:#6fc2a3;--accent-fg:#10201a;color:var(--fg);background:#14201d;border:12px solid #3a4743;border-bottom-width:20px;border-radius:18px;padding:0;gap:0;box-shadow:0 14px 36px rgba(0,0,0,.55),inset 0 0 50px rgba(111,194,163,.12)}
-#pc .pcbar{background:#22332f;padding:6px 10px;border-bottom:1px solid var(--line)}#pc .pcbar b::before{content:"●●● ";letter-spacing:2px;color:#6fc2a3;opacity:.75}
-#pc #pcb{padding:12px}.pcrow .opt{border:1px solid var(--line);border-radius:10px}
-#pc{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:12px}
-.pcwin{width:min(480px,100%);max-height:100%;overflow:auto;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
-.pcbar{display:flex;justify-content:space-between;align-items:center}#pcx{width:40px;height:40px}
+#pc{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:10px}
+.mon{width:min(540px,100%);display:flex;flex-direction:column;align-items:center}
+.bez{width:100%;background:#323b38;border-radius:16px 16px 8px 8px;padding:12px 12px 24px;position:relative;box-shadow:0 12px 32px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.12)}
+.bez::after{content:"";position:absolute;bottom:9px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#6fc2a3;box-shadow:0 0 8px #6fc2a3}
+.scr{--bg:#14201d;--card:#1b2a26;--fg:#e4ede9;--line:#3d504a;--accent:#6fc2a3;--accent-fg:#10201a;color:var(--fg);background:#0f1a18;border:3px solid #0a0f0e;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;max-height:min(68dvh,540px);box-shadow:inset 0 0 40px rgba(111,194,163,.15)}
+.pcbar{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 4px 10px;background:#22332f;border-bottom:1px solid var(--line);font-size:.85rem}.pcbar b::before{content:"●●● ";letter-spacing:2px;color:#6fc2a3;opacity:.75}#pcx{width:34px;height:30px;padding:0}
+#pcb{flex:1;min-height:0;overflow:auto;padding:12px;color:var(--fg)}
+#pcb.desk{background:radial-gradient(circle at 80% 20%,rgba(242,209,107,.35),transparent 45%),linear-gradient(140deg,#1d6a73,#2f6b57 60%,#1d3b35);min-height:190px}
+.icons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ico{display:flex;flex-direction:column;align-items:center;gap:4px;background:transparent;border:none;color:#fff;font-size:.8rem;padding:8px 2px!important;text-shadow:0 1px 3px rgba(0,0,0,.7)}.ico span:first-child{font-size:2rem;line-height:1}.ico:focus-visible,.ico:hover{background:rgba(255,255,255,.18);border-radius:10px}
+.task{display:flex;gap:10px;align-items:center;padding:4px 10px;background:#1a2825;border-top:1px solid var(--line);font-size:.78rem}#pck{flex:1}
+.neck{width:64px;height:24px;background:linear-gradient(90deg,#2b3330,#3f4a46,#2b3330)}.base{width:170px;height:10px;background:#3a4642;border-radius:8px 8px 4px 4px;box-shadow:0 4px 10px rgba(0,0,0,.4)}
+@media (max-height:560px){.neck,.base{display:none}.scr{max-height:76dvh}.bez{padding:8px 8px 18px}}
 #pcb{display:flex;flex-direction:column;gap:10px}#pcb button{min-height:44px;padding:6px 12px}.pcrow{display:flex;gap:8px;flex-wrap:wrap}.pcrow .big{flex:1 1 40%;font-weight:700}
 .tg{font:1.05rem/1.6 ui-monospace,Consolas,monospace;word-break:break-word}.tg .ok{color:var(--accent)}.tg .bad{background:#c0392b;color:#fff}.tg .cur{border-bottom:3px solid var(--fg)}
 </style>
@@ -124,7 +141,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
   </main>
 </div>
 
-<div id="pc" class="hide" role="dialog" aria-modal="true" aria-labelledby="pct"><div class="pcwin"><div class="pcbar"><b id="pct"></b><button id="pcx" aria-label="Close computer">✕</button></div><div id="pcb"></div></div></div>
+<div id="pc" class="hide" role="dialog" aria-modal="true" aria-labelledby="pct"><div class="mon"><div class="bez"><div class="scr"><div class="pcbar"><b id="pct"></b><button id="pcx" aria-label="Close computer">✕</button></div><div id="pcb" class="desk"></div><div class="task"><span>⊞</span><span id="pck"></span><span id="clk"></span></div></div></div><div class="neck"></div><div class="base"></div></div></div>
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),$=id=>document.getElementById(id);
 const msg=$('msg'),chatEl=$('chat'),logEl=$('log'),inp=$('inp'),nick=$('nick'),who=$('who');
@@ -160,7 +177,7 @@ addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(map[k])keys[map[k]]=
 document.querySelectorAll('[data-d]').forEach(b=>{const d=b.dataset.d,on=e=>{keys[d]=1;e.preventDefault()},off=()=>{keys[d]=0};
  b.addEventListener('pointerdown',on);['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,off))});
 $('talk').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
-let pcOpen=false,PCS='',PSV=null,wt=0;const PCI={menu:'💻',type:'⌨️',quiz:'🐍',code:'🧑‍💻'};const setPC=x=>{PCS=x;sendPresence(true)},setSV=o=>{PSV=o;sendPresence(true)};const pcEl=$('pc'),pcb=$('pcb');
+let pcOpen=false,PCS='',PSV=null,wt=0;const PCI={menu:'💻',type:'⌨️',quiz:'🐍',code:'🧑‍💻'};const setPC=x=>{PCS=x;$('pck').textContent=PCN[x]||'';sendPresence(true)},setSV=o=>{PSV=o;sendPresence(true)};const pcEl=$('pc'),pcb=$('pcb');
 const TYPE=['Practice makes progress.','A function can call itself.','Every list starts at index zero.','The base case stops the recursion.','Save your work before you log off.'];
 const mk=(tag,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;return e};
 function watchable(){if(P.sit||pcOpen)return null;let b=null,bd=48;for(const o of lastOv){if(!o.pc)continue;const d=Math.hypot(o.x-P.x,o.y-P.y);if(d<bd){bd=d;b=o}}return b}
@@ -172,16 +189,19 @@ function viewOf(c){const d=mk('div'),s=c.sv||{},k=s.k||c.pc,n=mk('p','hint');d.s
     n.textContent=s.r===1?'✅ Solved. Output: '+q[2]:s.r===2?'Showing the answer.':'Typing the answer…';d.append(pre,n)}
   else{n.textContent='Choosing an activity…';d.append(n)}
   return d}
-function openWatch(o){pcOpen=true;pcEl.classList.remove('hide');const id=o.id;$('pct').textContent=o.name+'’s screen';
-  const draw=()=>{const c=lastOv.find(x=>x.id===id);pcb.innerHTML='';
+function openWatch(o){pcTick();pcOpen=true;pcEl.classList.remove('hide');const id=o.id;$('pct').textContent=o.name+'’s screen';
+  const draw=()=>{const c=lastOv.find(x=>x.id===id);pcb.className=c&&c.pc==='menu'?'desk':'win';$('pck').textContent=c?PCN[c.pc]||'':'';pcb.innerHTML='';
     if(!c||!c.pc){const m=mk('p');m.textContent=o.name+' left the computer.';pcb.appendChild(m);clearInterval(wt);return}
     pcb.appendChild(viewOf(c))};
   clearInterval(wt);draw();wt=setInterval(draw,250);$('pcx').focus()}
 function pcClose(){clearInterval(wt);PSV=null;setPC('');pcOpen=false;pcEl.classList.add('hide');pcb.innerHTML=''}
-function openPC(it){pcOpen=true;pcEl.classList.remove('hide');$('pct').textContent=it.n;pcMenu()}
-function pcMenu(){setPC('menu');setSV({k:'menu'});pcb.innerHTML='';const r=mk('div','pcrow'),a=btn('⌨️ Typing challenge',pcType),b=btn('🐍 Python question',pcQuiz),c=btn('🧑‍💻 Coding lab',pcCode);a.className=b.className=c.className='big';r.append(a,b,c);
-  const h=mk('p','hint');h.textContent='Pick an activity. Press Esc or ✕ to go back to your seat.';pcb.append(r,h);a.focus()}
-function pcType(){setPC('type');const ti=Math.random()*TYPE.length|0,t=TYPE[ti];setSV({k:'type',i:ti,v:''});pcb.innerHTML='';
+function openPC(it){pcTick();pcOpen=true;pcEl.classList.remove('hide');$('pct').textContent=it.n;pcMenu()}
+const PCN={menu:'Desktop',type:'⌨️ Typing',quiz:'🐍 Python quiz',code:'🧑‍💻 Coding lab'};
+function pcTick(){$('clk').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+const ico=(e,t,f)=>{const b=mk('button','ico'),i=mk('span'),l=mk('span');i.textContent=e;l.textContent=t;b.append(i,l);b.onclick=f;return b};
+function pcMenu(){setPC('menu');setSV({k:'menu'});pcb.className='desk';pcb.innerHTML='';const r=mk('div','icons');
+  r.append(ico('⌨️','Typing',pcType),ico('🐍','Python quiz',pcQuiz),ico('🧑‍💻','Coding lab',pcCode));pcb.appendChild(r);r.firstChild.focus()}
+function pcType(){setPC('type');const ti=Math.random()*TYPE.length|0,t=TYPE[ti];setSV({k:'type',i:ti,v:''});pcb.className='win';pcb.innerHTML='';
   const g=mk('div','tg'),i=mk('input'),res=mk('div');g.setAttribute('aria-label','Text to type: '+t);
   const sp=[...t].map(c=>{const e=mk('span');e.textContent=c;g.appendChild(e);return e});
   i.autocomplete='off';i.autocapitalize='off';i.spellcheck=false;i.setAttribute('aria-label','Type the text above');res.setAttribute('aria-live','polite');let st=0,done=false;
@@ -198,7 +218,7 @@ const CODE=[
 ['from math import ____\nprint(sqrt(49))',['sqrt'],'7.0','sqrt returns a float.'],
 ['add = ____ a, b: a + b\nprint(add(2, 3))',['lambda'],'5','A lambda is a small anonymous function.'],
 ['for i in ____(3):\n    print(i)',['range'],'0, 1, 2','range(3) gives 0, 1 and 2.']];
-function pcCode(){setPC('code');const ci=Math.random()*CODE.length|0,q=CODE[ci];setSV({k:'code',i:ci,v:'',r:0});pcb.innerHTML='';
+function pcCode(){setPC('code');const ci=Math.random()*CODE.length|0,q=CODE[ci];setSV({k:'code',i:ci,v:'',r:0});pcb.className='win';pcb.innerHTML='';
   const pre=mk('pre','tg'),i=mk('input'),res=mk('div'),run=btn('Run code',check);let tries=0,done=false;
   pre.textContent=q[0];pre.style.margin=0;pre.style.whiteSpace='pre-wrap';i.placeholder='Type what goes in the blank';i.autocomplete='off';i.autocapitalize='off';i.spellcheck=false;i.setAttribute('aria-label','Fill in the blank');res.setAttribute('aria-live','polite');
   const end=(t,r)=>{setSV({k:'code',i:ci,v:i.value.slice(0,30),r});done=true;i.disabled=run.disabled=true;res.textContent=t+' ';res.append(btn('Another challenge',pcCode),btn('Back',pcMenu))};
@@ -208,7 +228,7 @@ function pcCode(){setPC('code');const ci=Math.random()*CODE.length|0,q=CODE[ci];
     else res.textContent='Not quite. Check the blank and run it again.'}
   i.oninput=()=>setSV({k:'code',i:ci,v:i.value.slice(0,30),r:0});i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check()}};
   pcb.append(pre,i,run,res);i.focus()}
-function pcQuiz(){setPC('quiz');const qi=Math.random()*BANK.length|0,q=BANK[qi];setSV({k:'quiz',i:qi,a:-1});pcb.innerHTML='';
+function pcQuiz(){setPC('quiz');const qi=Math.random()*BANK.length|0,q=BANK[qi];setSV({k:'quiz',i:qi,a:-1});pcb.className='win';pcb.innerHTML='';
   const h=mk('div','tg'),o=mk('div','pcrow'),res=mk('div');h.textContent='Module '+q[0]+': '+q[1];res.setAttribute('aria-live','polite');let done=false;
   q[2].forEach((x,k)=>{const b=mk('button','opt');b.textContent='ABCD'[k]+'. '+x;
     b.onclick=()=>{if(done)return;done=true;setSV({k:'quiz',i:qi,a:k});[...o.children].forEach((c,j)=>{c.classList.toggle('ok',j===q[3]);if(j===k&&k!==q[3])c.classList.add('no')});
