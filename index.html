@@ -80,7 +80,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
     <div id="eb" class="hide" style="width:100%;display:flex;flex-direction:column;gap:6px"><input id="eq" maxlength="140" placeholder="Question"><input id="e0" maxlength="50" placeholder="Answer A"><input id="e1" maxlength="50" placeholder="Answer B"><input id="e2" maxlength="50" placeholder="Answer C"><input id="e3" maxlength="50" placeholder="Answer D">
     <select id="ea"><option value="0">Correct: A</option><option value="1">Correct: B</option><option value="2">Correct: C</option><option value="3">Correct: D</option></select><input id="ee" maxlength="120" placeholder="Explanation (optional)"><button id="eadd">Add question</button><span id="em"></span><div id="el"></div></div></div>
   </section>
-        <section data-pane="class" role="tabpanel"><div class="card" id="lobby"><button id="gbtn" class="hide">Sign in with Google</button><button id="gout" class="hide">Sign out</button><button id="host">Host a class</button><input id="code" maxlength="5" placeholder="CODE" aria-label="Class code"><button id="join">Join</button><span id="rm" style="font-size:.9rem"></span></div>
+        <section data-pane="class" role="tabpanel"><div class="card" id="lobby"><button id="gbtn" class="hide">Sign in with Google</button><button id="gout" class="hide">Sign out</button><button id="gleave" class="hide">Leave class</button><button id="host">Host a class</button><input id="code" maxlength="5" placeholder="CODE" aria-label="Class code"><button id="join">Join</button><span id="rm" style="font-size:.9rem"></span></div>
   <div class="card" id="lb"></div></section>
         <section data-pane="chat" role="tabpanel"><div id="chat" hidden>
     <div id="log" aria-live="polite"></div>
@@ -164,18 +164,24 @@ function makeApi(uid,db){return{async join(name){
     peers:()=>Object.keys(peers).map(id=>({peer:id,isMe:id===key,sameTab:id===key,kind:'viewer',presence:peers[id]||{}})),
     presence(d){lastD=d;pend={...d};if(!timer)timer=setTimeout(flush,120);return Promise.resolve()},
     leave(){ref.off();conn.off();clearTimeout(timer);me.remove().catch(()=>{})}}}}}
+function resetMulti(){
+  if(room){room.leave();room=null}
+  Object.assign(G,{host:false,code:'',adm:[],kk:[],qn:0,qi:-1,ph:'idle',cq:null,score:0,an:-1,ci:-1});lastQn=-1;DOOR.wait=false;nick.readOnly=false;location.hash='';
+  try{sessionStorage.removeItem('cc_host')}catch(e){}
+  ['host','code','join'].forEach(i=>$(i).classList.remove('hide'));$('gleave').classList.add('hide')}
 function setupAuth(){
   if(!window.firebase||/PASTE/.test(FIREBASE_CONFIG.apiKey)){$('rm').textContent='Solo practice (multiplayer is not set up yet).';return}
   window.fbOK=true;firebase.initializeApp(FIREBASE_CONFIG);const au=firebase.auth(),db=firebase.database();
   $('rm').textContent='Sign in with Google to host or join a class.';
   $('gbtn').onclick=()=>au.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{$('rm').textContent='Sign-in failed ('+(e.code||'error')+').'});
-  $('gout').onclick=()=>{if(room){room.leave();room=null}G.host=false;DOOR.wait=false;nick.readOnly=false;au.signOut()};
+  $('gout').onclick=()=>{resetMulti();au.signOut()};$('gleave').onclick=()=>{resetMulti();$('rm').textContent='You left the class.'};
+  setInterval(()=>{const u=au.currentUser;if(G.host&&room&&u)try{sessionStorage.setItem('cc_host',JSON.stringify({code:G.code,uid:u.uid,adm:G.adm,kk:G.kk}))}catch(e){}},1500);
   au.onAuthStateChanged(u=>{
     $('gbtn').classList.toggle('hide',!!u);$('gout').classList.toggle('hide',!u);
-    if(!u){R=null;if(!room)$('rm').textContent='Sign in with Google to host or join a class.';return}
+    if(!u){R=null;resetMulti();$('rm').textContent='Sign in with Google to host or join a class.';return}
     const w=(u.displayName||'Student').trim().split(/\s+/);nick.value=(w[0]+(w[1]?' '+w[1][0]+'.':'')).slice(0,14);nick.readOnly=true;saveMe();
     R=makeApi(u.uid,db);
-    if(!room){$('rm').textContent='Signed in as '+myName()+'.';const h=location.hash.slice(1);if(/^[a-z0-9]{5}$/.test(h))enter(h,false)}})}
+    if(!room){$('rm').textContent='Signed in as '+myName()+'.';const h=location.hash.slice(1);if(/^[a-z0-9]{5}$/.test(h)){let sv=null;try{sv=JSON.parse(sessionStorage.getItem('cc_host')||'null')}catch(e){}enter(h,!!(sv&&sv.code===h&&sv.uid===u.uid),sv)}}})}
 function others(){
   if(!room)return[];const out=[];
   for(const p of room.peers()){
@@ -282,10 +288,10 @@ const BANK=[
 BANK[1][2]=['rammi','ogram','gramm','Program'];BANK[1][3]=2;
 const G={custom:[],ci:-1,rs:0,cq:null,tm:20,adm:[],kk:[],host:false,code:'',qn:0,qi:-1,ph:'idle',mod:0,score:0,an:-1};let lastQn=-1,lastRs=-1,curPh='',curQn=-1,t0=0,myAns=-1,done=false;
 const hostCtl=()=>G.host||!room;
-async function enter(code,host){
+async function enter(code,host,restore){
   if(!R){$('rm').textContent=window.fbOK?'Sign in with Google first.':'Multiplayer is not set up yet.';return}
-  try{room=await R.join('cc-'+code)}catch(e){$('rm').textContent='Could not join that class.';return}
-  ['host','code','join'].forEach(i=>$(i).classList.add('hide'));Object.assign(G,{adm:[],kk:[],host,code,qn:0,qi:-1,ph:'idle',score:0,an:-1});lastQn=-1;location.hash=code;sendPresence(true);
+  if(room){room.leave();room=null}try{room=await R.join('cc-'+code)}catch(e){$('rm').textContent='Could not join that class.';return}
+  ['host','code','join'].forEach(i=>$(i).classList.add('hide'));$('gleave').classList.remove('hide');Object.assign(G,{adm:[],kk:[],host,code,qn:0,qi:-1,ph:'idle',score:0,an:-1});lastQn=-1;if(host&&restore){G.adm=(restore.adm||[]).slice(0,150);G.kk=(restore.kk||[]).slice(0,150)}location.hash=code;sendPresence(true);
   $('rm').textContent=(host?'You are the teacher. ':'')+'Class code: '+code.toUpperCase()+(host?'  (Share > Copy link also joins people)':'')}
 $('host').onclick=()=>enter(Array.from({length:5},()=>'abcdefghjkmnpqrstuvwxyz23456789'[Math.random()*31|0]).join(''),true);
 $('join').onclick=()=>{const c=$('code').value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);if(c.length===5)enter(c,false)};
@@ -327,7 +333,7 @@ function gate(out){
   const ok=!!hs&&!!id&&hs.adm.includes(id);DOOR.wait=!ok;
   return ok?out.filter(o=>o.id===hs.id||hs.adm.includes(o.id)):[]}
 function kickedOut(){if(!room)return;const r=room;room=null;r.leave();G.host=false;DOOR.wait=false;location.hash='';
-  ['host','code','join'].forEach(i=>$(i).classList.remove('hide'));$('rm').textContent='The teacher removed you from the class.'}
+  ['host','code','join'].forEach(i=>$(i).classList.remove('hide'));$('gleave').classList.add('hide');$('rm').textContent='The teacher removed you from the class.'}
 const btn=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.onclick=f;return b};
 function doorUI(){const d=$('door');
   if(DOOR.wait){d.classList.remove('hide');d.textContent=DOOR.hasHost?'🚪 You are waiting at the door. The teacher will let you in.':'🚪 Waiting for the teacher to open the class…';doorSig='';return}
