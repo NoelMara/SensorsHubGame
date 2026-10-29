@@ -150,7 +150,7 @@ function sendPresence(force){
   room.presence({x:Math.round(P.x),y:Math.round(P.y),f:P.f,m:P.m,c:P.ci,h:G.host?1:0,adm:G.adm,kk:G.kk,cq:G.cq,tm:G.tm,rs:G.rs,qn:G.qn,qi:G.qi,ph:G.ph,sc:G.score,an:G.an,hs:P.hs,s:P.sit?1:0,b:myB,bn:myBn,n:myName()}).catch(()=>{});
 }
 /* Firebase multiplayer + Google sign-in. Same room API the page already uses: join, peers, presence, leave */
-const FIREBASE_CONFIG={apiKey:"PASTE_API_KEY",authDomain:"PASTE_PROJECT.firebaseapp.com",databaseURL:"https://PASTE_PROJECT-default-rtdb.firebaseio.com",projectId:"PASTE_PROJECT",appId:"PASTE_APP_ID"};
+const FIREBASE_CONFIG={apiKey:"AIzaSyBnVyMmBbFjPbLpjQEvKJnfJwT5gtWxzjE",authDomain:"sensorshubgame.firebaseapp.com",databaseURL:"https://sensorshubgame-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"sensorshubgame",appId:"1:1884750891:web:a3664ee9deca1baafcd66e"};
 function makeApi(uid,db){return{async join(name){
   const ref=db.ref('rooms/'+name+'/p'),me=ref.child(uid),conn=db.ref('.info/connected');
   let peers={},last={},lastD=null,pend=null,timer=null;
