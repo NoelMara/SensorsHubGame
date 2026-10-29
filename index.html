@@ -54,23 +54,24 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
 }
 #menu{display:none;padding:7px 12px;font-weight:700;background:var(--accent);color:var(--accent-fg);border:none}
 .dpad button,#talk{user-select:none;-webkit-user-select:none}
-@media (max-width:760px) and (orientation:portrait){
- .ctrl{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"m m" "d t";gap:8px 14px;align-items:center}
- .cr{display:contents}#msg{grid-area:m;min-height:38px}
- .dpad{grid-area:d;grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:8px}
- .dpad button{font-size:1.3rem;border-radius:14px}
- #talk{grid-area:t;justify-self:end;width:100px;height:100px;border-radius:50%;font-size:1.05rem}
+.cvw{position:relative;min-width:0}
+.dpad{position:absolute;z-index:5;left:10px;bottom:10px;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(2,48px);gap:6px}
+#talk{position:absolute;z-index:5;right:12px;bottom:12px;width:84px;height:84px;border-radius:50%;font-size:1rem}
+.dpad button,#talk{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.5);-webkit-backdrop-filter:blur(8px) saturate(1.4);backdrop-filter:blur(8px) saturate(1.4);box-shadow:0 2px 10px rgba(0,0,0,.28);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.dpad button{border-radius:14px;font-size:1.2rem}
+#talk{background:rgba(47,107,87,.6);background:color-mix(in srgb,var(--accent) 55%,transparent);font-weight:700}
+.dpad button:active,#talk:active{background:rgba(255,255,255,.4)}
+@media (min-width:761px) and (min-height:561px){
+ .app{max-width:1600px}.game{grid-template-columns:minmax(0,1fr) minmax(300px,380px)}
+ #c{width:min(100%,calc((100dvh - 130px)*1.4286));margin-inline:auto}.stage{align-items:stretch}
 }
 @media (orientation:landscape) and (max-height:560px){
  #menu{display:inline-block}
- .game{display:flex;justify-content:center;align-items:flex-start}.stage{display:block}
+ .game{display:flex;justify-content:center;align-items:flex-start}.stage{display:block;max-width:100%}
  #c{height:calc(100dvh - 50px);width:auto;max-width:100%}
- .ctrl,.cr{display:contents}
- .dpad{position:fixed;z-index:5;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));grid-template-columns:repeat(3,54px);grid-template-rows:repeat(2,54px);gap:8px}
- .dpad button{opacity:.85;border-radius:14px;font-size:1.2rem}
- #talk{position:fixed;z-index:5;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:92px;height:92px;border-radius:50%;opacity:.92}
- #msg{position:fixed;z-index:4;left:50%;transform:translateX(-50%);bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:min(42vw,420px);box-shadow:0 2px 10px rgba(0,0,0,.3)}#msg:empty{display:none}
- .side{position:fixed;z-index:10;top:0;right:0;bottom:0;width:min(360px,52vw);height:auto;max-height:none;padding:10px 12px;padding-right:calc(12px + env(safe-area-inset-right,0px));background:var(--bg);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.35);transform:translateX(105%);transition:transform .2s}
+ .dpad{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px)}#talk{width:76px;height:76px}
+ #msg{position:fixed;z-index:4;left:50%;transform:translateX(-50%);bottom:calc(6px + env(safe-area-inset-bottom,0px));max-width:min(42vw,420px);box-shadow:0 2px 10px rgba(0,0,0,.3);background:rgba(255,255,255,.75);color:#1f2b28;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}#msg:empty{display:none}
+ .side{position:fixed;z-index:10;top:0;right:0;bottom:0;width:min(360px,52vw);height:auto;max-height:none;padding:10px 12px;padding-right:calc(12px + env(safe-area-inset-right,0px));background:var(--bg);background:color-mix(in srgb,var(--bg) 76%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.35);transform:translateX(105%);transition:transform .2s}
  .side.open{transform:none}
 }
 #pc{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:12px}
@@ -85,16 +86,15 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
   <header class="top"><h1>Computer Classroom</h1><input id="nick" maxlength="14" placeholder="Your name" aria-label="Your name"><button id="menu" aria-expanded="false">☰ Class <span id="mbadge"></span></button><span id="who">Solo</span></header>
   <main class="game">
     <section class="stage">
-      <canvas id="c" width="640" height="448" aria-label="Top-down view of a classroom with computers on the desks"></canvas>
-      <div class="pad ctrl">
-        <div class="dpad">
+      <div class="cvw"><canvas id="c" width="640" height="448" aria-label="Top-down view of a classroom with computers on the desks"></canvas>
+      <div class="dpad">
       <button class="up" data-d="up" aria-label="Up">▲</button>
       <button class="left" data-d="left" aria-label="Left">◀</button>
       <button class="down" data-d="down" aria-label="Down">▼</button>
       <button class="right" data-d="right" aria-label="Right">▶</button>
     </div>
-    <div class="cr"><div id="msg" aria-live="polite"></div><button id="talk">Talk</button></div>
-      </div>
+      <button id="talk">Talk</button></div>
+      <div id="msg" aria-live="polite"></div>
     </section>
     <aside class="side">
       <div class="card hide" id="door" aria-live="polite"></div>
@@ -216,7 +216,7 @@ let room=null,R=null,lastSent=0,lastKey='';const peerPos={},peerB={};
 function sendPresence(force){
   if(!room)return;const now=performance.now();
   const key=[G.adm.join(),G.kk.join(),G.qn,G.ph,G.score,G.an,G.host,Math.round(P.x),Math.round(P.y),P.f,P.m,P.ci,P.hs,P.sit,PCS,myBn,myName()].join('|');
-  if(!force&&(key===lastKey||now-lastSent<70))return;
+  if(!force&&(key===lastKey||now-lastSent<50))return;
   lastKey=key;lastSent=now;
   room.presence({x:Math.round(P.x),y:Math.round(P.y),f:P.f,m:P.m,c:P.ci,h:G.host?1:0,adm:G.adm,kk:G.kk,cq:G.cq,tm:G.tm,rs:G.rs,qn:G.qn,qi:G.qi,ph:G.ph,sc:G.score,an:G.an,hs:P.hs,s:P.sit?1:0,pc:PCS,b:myB,bn:myBn,n:myName()}).catch(()=>{});
 }
@@ -238,7 +238,7 @@ function makeApi(uid,db){return{async join(name){
   conn.on('value',sn=>{NET.on=!!sn.val();if(sn.val()){me.onDisconnect().remove();last={};if(lastD){pend={...lastD};flush()}}});
   return{
     peers:()=>Object.keys(peers).filter(id=>id===key||fresh(peers[id])).map(id=>({peer:id,isMe:id===key,sameTab:id===key,kind:'viewer',presence:peers[id]||{}})),
-    presence(d){lastD=d;pend={...d};if(!timer)timer=setTimeout(flush,120);return Promise.resolve()},
+    presence(d){lastD=d;pend={...d};if(!timer)timer=setTimeout(flush,60);return Promise.resolve()},
     leave(){clearInterval(hb);offRef.off();document.removeEventListener('visibilitychange',vis);ref.off();conn.off();clearTimeout(timer);me.remove().catch(()=>{})}}}}}
 function resetMulti(){
   if(room){room.leave();room=null}
