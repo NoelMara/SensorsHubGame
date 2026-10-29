@@ -77,9 +77,13 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
 }
 @media (orientation:landscape) and (max-height:560px){
  #menu{display:inline-block}
- .game{display:flex;justify-content:center;align-items:flex-start}.stage{display:block;max-width:100%}
- #c{height:calc(100dvh - 50px);width:auto;max-width:100%}
- .dpad{grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px)}#talk{width:76px;height:76px}
+ .app{padding:0;gap:0}.game,.stage{display:block}
+ #c{position:fixed;inset:0;z-index:0;width:100vw;height:100dvh;aspect-ratio:auto;border:none;border-radius:0}
+ .top{position:fixed;z-index:6;top:calc(6px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));padding:0;gap:6px}
+ #nick{flex:none;width:110px;background:rgba(255,255,255,.8);color:#1f2b28}
+ #who{margin:0;background:rgba(0,0,0,.45);color:#fff;padding:4px 10px;border-radius:12px;font-size:.75rem;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+ .dpad{position:fixed;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));grid-template-columns:repeat(3,50px);grid-template-rows:repeat(2,50px)}
+ #talk{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:80px;height:80px}
  #msg{position:fixed;z-index:4;left:50%;transform:translateX(-50%);bottom:calc(6px + env(safe-area-inset-bottom,0px));max-width:min(42vw,420px);box-shadow:0 2px 10px rgba(0,0,0,.3);background:rgba(255,255,255,.75);color:#1f2b28;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}#msg:empty{display:none}
  .side{position:fixed;z-index:10;top:0;right:0;bottom:0;width:min(360px,52vw);height:auto;max-height:none;padding:10px 12px;padding-right:calc(12px + env(safe-area-inset-right,0px));background:var(--bg);background:color-mix(in srgb,var(--bg) 76%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.35);transform:translateX(105%);transition:transform .2s}
  .side.open{transform:none}
@@ -134,7 +138,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
   </div>
   <div class="row" id="sayrow" style="margin-top:8px"><input id="say" maxlength="60" placeholder="Say to everyone nearby…" aria-label="Say to other players"><button id="sayb">Say</button><button class="em" aria-label="Wave">👋</button><button class="em" aria-label="Laugh">😂</button><button class="em" aria-label="Question">❓</button></div>
   </section>
-        <section data-pane="you" role="tabpanel"><div class="card"><span>Shirt</span><div class="sw" id="sw" role="group" aria-label="Shirt color"></div><button id="hair">Hair</button><button id="lang"></button></div>
+        <section data-pane="you" role="tabpanel"><div class="card"><span>Shirt</span><div class="sw" id="sw" role="group" aria-label="Shirt color"></div><button id="hair">Hair</button><button id="lang"></button><button id="zoom"></button></div>
           <p class="hint">Move: WASD or arrows. Talk, sit or use a computer: E. Host a class and share the code or the page link; the host is the instructor and runs the quiz. Ms. Reyes, Mia and Jon only show up when you are alone.</p></section>
       </div>
     </aside>
@@ -434,6 +438,9 @@ function quizTick(ov){
   $('qs').textContent=rev?'':'Time left: '+Math.ceil(left)+'s'}
 setInterval(()=>{doorUI();const a=standings().slice(0,6);if(curPh==='end')$('qe').textContent=['🥇','🥈','🥉'].map((m,i)=>a[i]?m+' '+a[i].n+' '+a[i].s:'').filter(Boolean).join('   ');
   $('lb').textContent='🏆 '+a.map(p=>p.n+(p.you?' (you)':'')+' '+p.s).join('  ·  ')},700);
+const CAMQ=matchMedia('(orientation:landscape) and (max-height:560px)');let ZM='auto',camX=320,camY=224;try{ZM=localStorage.getItem('cc_zoom')||'auto'}catch(e){}
+const ZL={auto:'Zoom: Auto',close:'Zoom: Close',whole:'Zoom: Whole room'};$('zoom').textContent=ZL[ZM];
+$('zoom').onclick=()=>{ZM=ZM==='auto'?'close':ZM==='close'?'whole':'auto';try{localStorage.setItem('cc_zoom',ZM)}catch(e){}$('zoom').textContent=ZL[ZM]};
 $('lang').textContent=LANG==='tl'?'Taglish':'English';
 $('lang').onclick=()=>{LANG=LANG==='tl'?'en':'tl';try{localStorage.setItem('cc_lang',LANG)}catch(e){}$('lang').textContent=LANG==='tl'?'Taglish':'English'};
 /* door: waiting room + kick */
@@ -524,8 +531,14 @@ function flushBubbles(){ctx.font='bold '+fs+'px Trebuchet MS, sans-serif';ctx.te
    ctx.fillStyle='#fffdf4';ctx.strokeStyle='#3a3a3a';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(bx,by,w,h,6);ctx.fill();ctx.stroke();
    ctx.beginPath();ctx.moveTo(b.x-4,by+h-1);ctx.lineTo(b.x,by+h+5);ctx.lineTo(b.x+4,by+h-1);ctx.fill();
    ctx.fillStyle='#222';L.forEach((q,i)=>ctx.fillText(q,bx+w/2,by+3+fs+i*(fs+2)))}BUB.length=0}
-function fit(){const k=Math.max(1,Math.min(3,(cv.clientWidth/640)*(devicePixelRatio||1))),w=Math.round(640*k),h=Math.round(448*k);if(cv.width!==w){cv.width=w;cv.height=h}ctx.setTransform(w/640,0,0,h/448,0,0)}
-function drawFloor(){fit();fs=Math.max(10,Math.min(17,Math.round(9/((cv.clientWidth||640)/640))));
+function fit(){const r=Math.min(2,devicePixelRatio||1);let w=Math.max(320,Math.round((cv.clientWidth||640)*r)),h=Math.max(224,Math.round((cv.clientHeight||448)*r));
+  if(w>1600){h=Math.round(h*1600/w);w=1600}if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h}
+  const close=ZM==='close'||(ZM==='auto'&&CAMQ.matches);let sc,ox,oy;
+  if(close){const VH=CAMQ.matches?260:280;sc=Math.max(h/VH,w/640);const vw=w/sc,vh=h/sc,tx=Math.max(vw/2,Math.min(640-vw/2,P.x+9)),ty=Math.max(vh/2,Math.min(448-vh/2,P.y+9));
+    camX+=(tx-camX)*.18;camY+=(ty-camY)*.18;ox=w/2-camX*sc;oy=h/2-camY*sc}
+  else{sc=Math.min(w/640,h/448);ox=(w-640*sc)/2;oy=(h-448*sc)/2}
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#161d1b';ctx.fillRect(0,0,w,h);ctx.setTransform(sc,0,0,sc,ox,oy);fit.u=sc*(cv.clientWidth||640)/w}
+function drawFloor(){fit();fs=Math.max(6,Math.min(17,Math.round(10/(fit.u||.6))));
   for(let ty=0;ty<14;ty++)for(let tx=0;tx<20;tx++){ctx.fillStyle=((tx+ty)&1)?SCENE.floor[0]:SCENE.floor[1];ctx.fillRect(tx*32,ty*32,32,32);ctx.fillStyle='rgba(90,55,20,.12)';ctx.fillRect(tx*32,ty*32+8+((tx*7+ty*3)%3)*8,32,1)}
   ctx.fillStyle=SCENE.rug;ctx.fillRect(238,110,164,50);ctx.strokeStyle='#e8d9a8';ctx.lineWidth=2;ctx.strokeRect(244,116,152,38)}
 function drawWalls(){
