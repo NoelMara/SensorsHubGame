@@ -110,7 +110,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
   <div class="row" id="sayrow" style="margin-top:8px"><input id="say" maxlength="60" placeholder="Say to everyone nearby…" aria-label="Say to other players"><button id="sayb">Say</button><button class="em" aria-label="Wave">👋</button><button class="em" aria-label="Laugh">😂</button><button class="em" aria-label="Question">❓</button></div>
   </section>
         <section data-pane="you" role="tabpanel"><div class="card"><span>Shirt</span><div class="sw" id="sw" role="group" aria-label="Shirt color"></div><button id="hair">Hair</button><button id="lang"></button></div>
-          <p class="hint">Move: WASD or arrows. Talk, sit or use a computer: E. Host a class and share the code or the page link; the host is the teacher and runs the quiz. Ms. Reyes, Mia and Jon only show up when you are alone.</p></section>
+          <p class="hint">Move: WASD or arrows. Talk, sit or use a computer: E. Host a class and share the code or the page link; the host is the instructor and runs the quiz. Ms. Reyes, Mia and Jon only show up when you are alone.</p></section>
       </div>
     </aside>
   </main>
@@ -318,7 +318,7 @@ async function enter(code,host,restore){
   if(!R){$('rm').textContent=window.fbOK?'Sign in with Google first.':'Multiplayer is not set up yet.';return}
   if(room){room.leave();room=null}try{room=await R.join('cc-'+code)}catch(e){$('rm').textContent='Could not join that class.';return}
   ['host','code','join'].forEach(i=>$(i).classList.add('hide'));$('gleave').classList.remove('hide');Object.assign(G,{adm:[],kk:[],host,code,qn:0,qi:-1,ph:'idle',score:0,an:-1});lastQn=-1;if(host&&restore){G.adm=(restore.adm||[]).slice(0,150);G.kk=(restore.kk||[]).slice(0,150)}location.hash=code;sendPresence(true);
-  $('rm').textContent=(host?'You are the teacher. ':'')+'Class code: '+code.toUpperCase()+(host?'  (Share > Copy link also joins people)':'')}
+  $('rm').textContent=(host?'You are the instructor. ':'')+'Class code: '+code.toUpperCase()+(host?'  (Share > Copy link also joins people)':'')}
 $('host').onclick=()=>enter(Array.from({length:5},()=>'abcdefghjkmnpqrstuvwxyz23456789'[Math.random()*31|0]).join(''),true);
 $('join').onclick=()=>{const c=$('code').value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);if(c.length===5)enter(c,false)};
 $('mod').onchange=e=>{G.mod=+e.target.value;G.ci=-1;G.qi=-1};
@@ -329,8 +329,8 @@ function npcOff(ov){const off=!!room&&(ov.length>0||DOOR.wait);npcs.forEach(n=>n
 function renderQ(S){
   const o=$('qo');o.innerHTML='';$('qe').textContent='';
   if(S.ph==='end'){$('qt').textContent='🏆 Quiz finished! Final scores:';return}
-  if(!curQ(S)){$('qt').textContent=hostCtl()?'Press “Start quiz” to begin.':'Waiting for the teacher to start…';return}
-  const q=curQ(S);$('qt').textContent=(q[0]==='T'?'Teacher':'Module '+q[0])+': '+q[1];
+  if(!curQ(S)){$('qt').textContent=hostCtl()?'Press “Start quiz” to begin.':'Waiting for the instructor to start…';return}
+  const q=curQ(S);$('qt').textContent=(q[0]==='T'?'Instructor':'Module '+q[0])+': '+q[1];
   q[2].forEach((t,i)=>{const b=document.createElement('button');b.className='opt';b.textContent='ABCD'[i]+'. '+t;
    b.onclick=()=>{if(myAns>=0||done)return;myAns=i;G.an=S.qn;b.classList.add('sel');sendPresence(true)};o.appendChild(b)});
   if(!npcs[0].off)speak(npcs[0],(LANG==='tl'?'Quiz time!':'Question time!')+(q[0]==='T'?'':' Module '+q[0]+'.'),3500)}
@@ -359,11 +359,11 @@ function gate(out){
   const ok=!!hs&&!!id&&hs.adm.includes(id);DOOR.wait=!ok;
   return ok?out.filter(o=>o.id===hs.id||hs.adm.includes(o.id)):[]}
 function kickedOut(){if(!room)return;const r=room;room=null;r.leave();G.host=false;DOOR.wait=false;location.hash='';
-  ['host','code','join'].forEach(i=>$(i).classList.remove('hide'));$('gleave').classList.add('hide');$('rm').textContent='The teacher removed you from the class.'}
+  ['host','code','join'].forEach(i=>$(i).classList.remove('hide'));$('gleave').classList.add('hide');$('rm').textContent='The instructor removed you from the class.'}
 const btn=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.onclick=f;return b};
 function doorUI(){const d=$('door');
   if(room&&(NET.err||NET.on===false)){d.classList.remove('hide');d.textContent='⚠️ '+(NET.err||'No connection to the class. Check your internet.');doorSig='';return}
-  if(DOOR.wait){d.classList.remove('hide');d.textContent=DOOR.hasHost?'🚪 You are waiting at the door. The teacher will let you in.':'🚪 Waiting for the teacher to open the class…';doorSig='';return}
+  if(DOOR.wait){d.classList.remove('hide');d.textContent=DOOR.hasHost?'🚪 You are waiting at the door. The instructor will let you in.':'🚪 Waiting for the instructor to open the class…';doorSig='';return}
   if(!(room&&G.host)){d.classList.add('hide');return}
   const sig=DOOR.waiting.map(w=>w.id+w.name).join('|')+'#'+DOOR.inside.map(w=>w.id+w.name).join('|');if(sig===doorSig)return;doorSig=sig;
   d.innerHTML='';d.classList.toggle('hide',!DOOR.waiting.length&&!DOOR.inside.length);
@@ -406,7 +406,7 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setTab(b.datase
 setInterval(()=>{if(chat&&!wasChat){setTab('chat');drawer(true)}wasChat=!!chat;const n=DOOR.waiting.length;$('tbadge').textContent=$('mbadge').textContent=n?'('+n+')':'';const need=DOOR.wait||n>0;if(need&&!needPrev)drawer(true);needPrev=need},300);
 /* drawing */
 function drawChar(px,py,o){
-  if(o.name&&o.an===curQn&&curQn>0)o={...o,name:o.name+' ✓'};if(o.h)o={...o,hs:2,ac:'glasses',cl:'#8a5cc4',name:(o.name||'')+' (T)'};
+  if(o.name&&o.an===curQn&&curQn>0)o={...o,name:o.name+' ✓'};if(o.h)o={...o,hs:2,ac:'glasses',cl:'#8a5cc4',name:(o.name||'')+' (Instr.)'};
   const x=px+9,y=py+18,t=performance.now()/110,st=o.m?Math.sin(t)*3:0,bob=o.m?Math.abs(Math.sin(t))*1.5:Math.sin(t/7+px)*.5+.5;
   const side=o.f==='l'||o.f==='r',dir=o.f==='r'?1:-1,col=o.cl||COLORS[o.ci],hair=HAIR[o.ci],skin=SKIN[o.ci],hs=o.hs|0,hy=y-25-bob;
   const R=(a,b,c,d,f)=>{ctx.fillStyle=f;ctx.fillRect(a,b,c,d)};
