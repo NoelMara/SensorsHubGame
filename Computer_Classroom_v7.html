@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Computer Classroom</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#e6ecea;--fg:#1f2b28;--card:#ffffff;--line:#c3cfcb;--accent:#2f6b57;--accent-fg:#ffffff;--chalk:#f2d16b;color-scheme:light dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a18;--fg:#e4ede9;--card:#1c2825;--line:#33443f;--accent:#6fc2a3;--accent-fg:#10201a}}
+:root[data-theme="dark"]{--bg:#121a18;--fg:#e4ede9;--card:#1c2825;--line:#33443f;--accent:#6fc2a3;--accent-fg:#10201a}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.45}
+.wrap{max-width:720px;margin:0 auto;padding:14px;display:flex;flex-direction:column}
+h1{order:0}.top{order:1}#lobby,#door{order:2}#c{order:3;aspect-ratio:640/448}.pad{order:4}#quiz,#ed{order:5}#msg{order:6}#chat{order:7}#sayrow{order:8}#lb{order:9}.hint{order:10}
+button{touch-action:manipulation;-webkit-touch-callout:none}
+h1{font-size:1.25rem;margin:0 0 8px}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);min-width:0}
+#nick{width:140px}
+.sw{display:flex;gap:5px}
+.sw button{width:26px;height:26px;border-radius:50%;padding:0;border:2px solid transparent}
+.sw button[aria-pressed="true"]{border-color:var(--fg)}
+#who{margin-left:auto;font-size:.85rem;opacity:.85}
+canvas{display:block;width:100%;height:auto;border-radius:10px;border:2px solid var(--line);background:#222;image-rendering:pixelated;touch-action:none}
+#msg,#chat{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--chalk);border-radius:8px;padding:10px 12px;font-size:.95rem;margin-top:8px}
+#msg{min-height:3.2em}
+#log{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+#log b{margin-right:6px}
+.row{display:flex;gap:6px}.row input{flex:1}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row button{padding:6px 12px}#send{background:var(--accent);color:var(--accent-fg);border:none}
+.pad{display:flex;justify-content:space-between;align-items:center;margin-top:12px;user-select:none;-webkit-user-select:none}
+.dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,56px);gap:6px}
+.dpad button{font-size:1.2rem;touch-action:none}
+.up{grid-column:2;grid-row:1}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}
+#talk{width:96px;height:96px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:700;border:none;touch-action:none}
+.hint{font-size:.8rem;opacity:.75;margin-top:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:8px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.card button{padding:6px 12px}.hide{display:none!important}#code{width:90px;text-transform:uppercase}
+.opt{flex:1 1 45%;text-align:left;padding:8px!important}.opt.sel{outline:3px solid var(--accent)}.opt.ok{background:#3f9a54;color:#fff}.opt.no{background:#c0392b;color:#fff}
+#qt{width:100%;font-weight:700}#qo,#qh{display:flex;flex-wrap:wrap;gap:6px;width:100%}#qs,#qe,#lb{width:100%;font-size:.9rem}
+@media (max-width:600px){
+ h1,.hint{display:none}.wrap{padding:8px}input,select{font-size:16px}.card button,.row button{min-height:40px}
+ .dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,48px)}#talk{width:84px;height:84px}.pad{margin-top:8px}#log{max-height:110px}.opt{min-height:44px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Computer Classroom</h1>
+  <div class="top">
+    <input id="nick" maxlength="14" placeholder="Your name" aria-label="Your name">
+    <div class="sw" id="sw" role="group" aria-label="Shirt color"></div>
+    <button id="hair" style="padding:5px 10px">Hair</button><button id="lang" style="padding:5px 10px"></button><button id="aib" style="padding:5px 10px">AI banter: off</button><span id="who">Solo</span>
+  </div>
+  <div class="card" id="lobby"><button id="host">Host a class</button><input id="code" maxlength="5" placeholder="CODE" aria-label="Class code"><button id="join">Join</button><span id="rm" style="font-size:.9rem"></span></div>
+  <div class="card hide" id="door" aria-live="polite"></div>
+  <canvas id="c" width="640" height="448" aria-label="Top-down view of a classroom with computers on the desks"></canvas>
+  <div id="chat" hidden>
+    <div id="log" aria-live="polite"></div>
+    <div class="row"><input id="inp" maxlength="200" placeholder="Say something…" autocomplete="off" aria-label="Your message"><button id="send">Send</button><button id="close">Close</button></div>
+  </div>
+  <div class="card" id="quiz"><div id="qt"></div><div id="qo"></div><div id="qs"></div><div id="qe"></div>
+    <div id="qh" class="hide"><select id="mod" aria-label="Module"><option value="0">Modules 5-8</option><option value="5">Module 5</option><option value="6">Module 6</option><option value="7">Module 7</option><option value="8">Module 8</option><option value="9">My questions</option></select><input id="tm" type="number" min="5" max="120" value="20" style="width:64px" aria-label="Seconds per question"><button id="st">Start quiz</button><button id="nx">Next</button><button id="rv">Reveal</button><button id="en">End</button></div></div>
+  <div class="card hide" id="ed"><button id="etog">✏️ Make your own questions (<span id="ecount">0</span>)</button>
+    <div id="eb" class="hide" style="width:100%;display:flex;flex-direction:column;gap:6px"><input id="eq" maxlength="140" placeholder="Question"><input id="e0" maxlength="50" placeholder="Answer A"><input id="e1" maxlength="50" placeholder="Answer B"><input id="e2" maxlength="50" placeholder="Answer C"><input id="e3" maxlength="50" placeholder="Answer D">
+    <select id="ea"><option value="0">Correct: A</option><option value="1">Correct: B</option><option value="2">Correct: C</option><option value="3">Correct: D</option></select><input id="ee" maxlength="120" placeholder="Explanation (optional)"><button id="eadd">Add question</button><span id="em"></span><div id="el"></div></div></div>
+  <div class="card" id="lb"></div>
+  <div id="msg" aria-live="polite"></div>
+  <div class="row" id="sayrow" style="margin-top:8px"><input id="say" maxlength="60" placeholder="Say to everyone nearby…" aria-label="Say to other players"><button id="sayb">Say</button><button class="em" aria-label="Wave">👋</button><button class="em" aria-label="Laugh">😂</button><button class="em" aria-label="Question">❓</button></div>
+  <div class="pad">
+    <div class="dpad">
+      <button class="up" data-d="up" aria-label="Up">▲</button>
+      <button class="left" data-d="left" aria-label="Left">◀</button>
+      <button class="down" data-d="down" aria-label="Down">▼</button>
+      <button class="right" data-d="right" aria-label="Right">▶</button>
+    </div>
+    <button id="talk">Talk</button>
+  </div>
+  <p class="hint">Move: WASD or arrows. Talk or look: E. Host a class and share the code or the page link. The host is the teacher and runs the quiz. Ms. Reyes, Mia and Jon only show up when you are alone.</p>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d'),$=id=>document.getElementById(id);
+const msg=$('msg'),chatEl=$('chat'),logEl=$('log'),inp=$('inp'),nick=$('nick'),who=$('who');
+const SCENE={title:'Computer Classroom',floor:['#c9a56b','#c19d62'],wall:'#b9c9c2',trim:'#6f8780',rug:'#7c3d4a'};
+document.querySelector('h1').textContent=document.title=SCENE.title;
+const SKIN=['#f0c9a0','#e3b389','#c68f66','#8d5a3b','#f5d5b8','#d9a679'],LOOK={'Ms. Reyes':{hs:2,ac:'glasses',cl:'#8a5cc4'},'Mia':{hs:1},'Jon':{hs:3,cl:'#d98a2b'}},BUB=[];
+let LANG='tl';try{LANG=localStorage.getItem('cc_lang')||'tl'}catch(e){}let fs=10;
+const COLORS=['#e0584a','#3b82c4','#3f9a54','#d98a2b','#8a5cc4','#2aa6a0'],HAIR=['#3a2a20','#1f1f2e','#7a4a22','#c9a227','#5b2a2a','#2a2a2a'];
+const walls=[[0,0,640,32],[0,416,640,32],[0,0,32,448],[608,0,32,448]];
+const items=[];const add=o=>items.push(o);
+const SCREENS=['#6fc2e8','#9be08a','#f2d16b','#e89ac0'];
+
+add({n:'Whiteboard',x:160,y:4,w:320,h:24,k:'board',lines:['Today: Intro to Computers. Task: open the typing program and finish level 2.','Someone drew a tiny cat in the corner of the board.']});
+add({n:'Window',x:48,y:4,w:80,h:24,k:'win',lines:['A sunny day outside. Birds are on the fence.']});
+add({n:'Window',x:512,y:4,w:80,h:24,k:'win',lines:['The playground is empty. Everyone is in class.']});
+add({n:'Door',x:48,y:416,w:40,h:32,k:'door',lines:['The door is closed. Class is in session.']});
+add({n:'Bookshelf',x:32,y:120,w:22,h:100,k:'shelf',solid:1,lines:['Dictionaries, a worn atlas, and a book called “Computers for Beginners.”']});
+add({n:'Plant',x:566,y:372,w:24,h:28,k:'plant',solid:1,lines:['A plant that survived three semesters.']});
+add({n:'Teacher’s computer',x:272,y:76,w:96,h:30,k:'desk',c:'#6d4420',solid:1,sc:0,lines:['The attendance sheet is open. Everyone is marked present.','A slideshow titled “Typing Speed Challenge” is ready to go.']});
+add({n:'Ms. Reyes (Teacher)',x:310,y:118,w:20,h:20,k:'npc',ci:0,solid:1,ai:{persona:'You are Ms. Reyes, a warm, slightly witty college instructor in a BSIT computer lab. Students call you Ma’am. You help with programming, Python OOP, schedules and school requirements.',greet:{en:'Good morning! Pick any computer you like. Ask me anything.',tl:'Good morning! Pili lang kayo ng computer. Tanong lang kayo kung may kailangan.'}},lines:['Take any seat you like.']});
+add({n:'Mia (Classmate)',x:560,y:210,w:20,h:20,k:'npc',ci:1,solid:1,ai:{persona:'You are Mia, a friendly, curious 2nd-year BSIT student who loves coding and gossips a little about deadlines, org events and the canteen.',greet:{en:'Hi! Did you finish the Python activity yet?',tl:'Uy! Tapos mo na ba yung Python activity?'}},lines:['Hi!']});
+add({n:'Jon (Classmate)',x:62,y:330,w:20,h:20,k:'npc',ci:3,solid:1,ai:{persona:'You are Jon, a funny but kind college student who jokes a lot, loves mobile games, is always puyat from gaming, and procrastinates on requirements.',greet:{en:'Shh, I’m pretending to work. What’s up?',tl:'Shh, nagpapanggap akong nagko-code. Ano meron?'}},lines:['Hey.']});
+
+const deskTxt=['Typing practice: 42 words per minute. Not bad!','A spreadsheet of lunch orders. Pizza is winning.','A paint program with a half-drawn rocket ship.','A quiz website. Question 3 is unanswered.','The browser is on a page about volcanoes.','A coding game: level 5, “Make the robot walk.”','Someone left a chat window open. It says “brb.”','A slideshow about dinosaurs. Slide 1 is perfect.','The screen is asleep. Wiggle the mouse?','A music player paused on a calm song.','A folder named “Homework FINAL final v2.”','A calculator app showing 8008135. Very mature.'];
+let di=0;
+for(const y of [170,246,322])for(const x of [108,224,340,456]){add({n:'Computer '+(di+1),x,y,w:76,h:30,k:'desk',c:'#9a6a35',solid:1,sc:di%4,chair:1,lines:[deskTxt[di%deskTxt.length]]});di++}
+
+const P={x:70,y:370,w:18,h:18,f:'u',m:false,ci:0,hs:0,sit:false};let myB='',myBn=0,myBUntil=0;
+const keys={up:0,down:0,left:0,right:0};
+const map={w:'up',arrowup:'up',s:'down',arrowdown:'down',a:'left',arrowleft:'left',d:'right',arrowright:'right'};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();if(map[k]){keys[map[k]]=1;e.preventDefault()}else if(k==='e'||k==='enter')interact()});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(map[k])keys[map[k]]=0});
+document.querySelectorAll('[data-d]').forEach(b=>{const d=b.dataset.d,on=e=>{keys[d]=1;e.preventDefault()},off=()=>{keys[d]=0};
+ b.addEventListener('pointerdown',on);['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,off))});
+$('talk').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
+
+/* name + color */
+try{nick.value=localStorage.getItem('cc_name')||'';P.ci=+localStorage.getItem('cc_ci')||0;P.hs=+localStorage.getItem('cc_hs')||0}catch(e){}
+if(!nick.value)nick.value='Student';
+COLORS.forEach((c,i)=>{const b=document.createElement('button');b.style.background=c;b.setAttribute('aria-label','Shirt color '+(i+1));b.onclick=()=>{P.ci=i;saveMe();sendPresence(true)};$('sw').appendChild(b)});
+function saveMe(){try{localStorage.setItem('cc_name',nick.value);localStorage.setItem('cc_ci',P.ci);localStorage.setItem('cc_hs',P.hs)}catch(e){}
+ [...$('sw').children].forEach((b,i)=>b.setAttribute('aria-pressed',i===P.ci))}
+nick.addEventListener('input',()=>{saveMe();sendPresence(true)});saveMe();
+const myName=()=>(nick.value.replace(/[^\p{L}\p{N} _.-]/gu,'').trim().slice(0,14))||'Student';
+
+/* multiplayer */
+let room=null,R=null,lastSent=0,lastKey='';const peerPos={},peerB={};
+function sendPresence(force){
+  if(!room)return;const now=performance.now();
+  const key=[G.adm.join(),G.kk.join(),G.qn,G.ph,G.score,G.an,G.host,Math.round(P.x),Math.round(P.y),P.f,P.m,P.ci,P.hs,P.sit,myBn,myName()].join('|');
+  if(!force&&(key===lastKey||now-lastSent<70))return;
+  lastKey=key;lastSent=now;
+  room.presence({x:Math.round(P.x),y:Math.round(P.y),f:P.f,m:P.m,c:P.ci,h:G.host?1:0,adm:G.adm,kk:G.kk,cq:G.cq,tm:G.tm,rs:G.rs,qn:G.qn,qi:G.qi,ph:G.ph,sc:G.score,an:G.an,hs:P.hs,s:P.sit?1:0,b:myB,bn:myBn,n:myName()}).catch(()=>{});
+}
+(async()=>{try{R=window.claude?await claude.use('room'):null}catch(e){R=null}
+ if(!R)$('rm').textContent='Solo practice (multiplayer needs a signed-in claude.ai viewer).';else{const h=location.hash.slice(1);if(/^[a-z0-9]{5}$/.test(h))enter(h,false)}})();
+function others(){
+  if(!room)return[];const out=[];
+  for(const p of room.peers()){
+    if(p.isMe||p.kind!=='viewer')continue;const d=p.presence;
+    if(typeof d.x!=='number'||typeof d.y!=='number')continue;
+    const tx=Math.max(32,Math.min(590,d.x)),ty=Math.max(32,Math.min(398,d.y));
+    const q=peerPos[p.peer]||(peerPos[p.peer]={x:tx,y:ty});
+    q.x+=(tx-q.x)*.3;q.y+=(ty-q.y)*.3;
+    const r=peerB[p.peer]||(peerB[p.peer]={bn:-1,until:0}),bn=+d.bn|0;if(bn!==r.bn){r.bn=bn;r.until=bn&&d.b?performance.now()+5000:0}
+    out.push({adm:Array.isArray(d.adm)?d.adm.filter(x=>typeof x==='string').slice(0,150):[],kk:Array.isArray(d.kk)?d.kk.filter(x=>typeof x==='string').slice(0,150):[],id:p.peer,cq:(c=>c&&typeof c.t==='string'&&Array.isArray(c.o)&&c.o.length===4&&Number.isInteger(c.a)&&c.a>=0&&c.a<4?{t:c.t.slice(0,140),o:c.o.map(x=>String(x).slice(0,50)),a:c.a,e:String(c.e||'').slice(0,120)}:null)(d.cq),tm:Math.max(5,Math.min(120,+d.tm||20)),rs:+d.rs|0,sit:d.s===1,h:d.h===1,qn:+d.qn|0,qi:Number.isInteger(d.qi)&&d.qi>=0&&d.qi<BANK.length?d.qi:-1,ph:d.ph==='show'||d.ph==='end'?d.ph:'ask',sc:Math.max(0,Math.min(99999,+d.sc|0)),an:+d.an|0,hs:Math.abs(+d.hs|0)%4,b:performance.now()<r.until?String(d.b||'').replace(/[\u0000-\u001f]/g,'').slice(0,60):'',x:q.x,y:q.y,f:'udlr'.includes(d.f)&&d.f.length===1?d.f:'d',m:d.m===true,ci:Math.abs(+d.c|0)%6,name:String(d.n||'Student').replace(/[\u0000-\u001f]/g,'').slice(0,14)});
+  }
+  return gate(out);
+}
+
+/* collisions + proximity */
+const overlap=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+const hit=r=>walls.some(w=>overlap(r,{x:w[0],y:w[1],w:w[2],h:w[3]}))||items.some(it=>it.solid&&!it.off&&overlap(r,it));
+function nearest(){let best=null,bd=16;for(const it of items){if(it.off)continue;
+  const dx=Math.max(it.x-(P.x+P.w),P.x-(it.x+it.w),0),dy=Math.max(it.y-(P.y+P.h),P.y-(it.y+it.h),0),d=Math.hypot(dx,dy);
+  if(d<bd){bd=d;best=it}}return best}
+
+/* talking: canned lines for objects, AI chat for characters */
+let talk=null,idx={},chat=null,sampleFn=null,aiOk=false,AIB=false,aiCalls=0,lastAI=0,banterAt=performance.now()+4000,banterBusy=false;
+const npcs=items.filter(i=>i.k==='npc'),nm=n=>n.n.split(' (')[0],heard=[];
+const CANNED={tl:[
+[['Mia','Uy, natapos mo na ba yung Python activity?'],['Jon','Hindi pa. Bahala na si Lord.'],['Ms. Reyes','Jon, deadline na mamaya ha.']],
+[['Jon','Mia, tingnan mo calculator ko, 8008135.'],['Mia','Jon, grow up nga.'],['Jon','Ayoko.']],
+[['Ms. Reyes','Sino nag-iwan ng chat window na bukas?'],['Mia','Hindi ako yan, Ma’am!'],['Jon','Baka ako nga po.']],
+[['Mia','Ang bagal ng Wi-Fi natin, kainis.'],['Ms. Reyes','I-restart mo muna yung browser, Mia.']],
+[['Jon','Ma’am, pwede maglaro ng coding game after?'],['Ms. Reyes','Tapusin muna yung midterm review, Jon.']],
+[['Mia','Anong review natin? Modules 5 to 8?'],['Jon','Oo, recursion pa lang takot na ako.'],['Mia','Base case lang naman yan, gets mo?']]],
+en:[
+[['Mia','Did you finish the Python activity yet?'],['Jon','Not yet. Bahala na.'],['Ms. Reyes','The deadline is tonight, Jon.']],
+[['Jon','Mia, look, my calculator says 8008135.'],['Mia','Jon. Please grow up.'],['Jon','Never.']],
+[['Ms. Reyes','Who left the chat window open again?'],['Mia','Not me, Ma’am!'],['Jon','Maybe me.']],
+[['Mia','This Wi-Fi is slower than my cat.'],['Ms. Reyes','Restart your browser first, Mia.']],
+[['Mia','Recursion scares me.'],['Jon','Same. Just remember the base case.']]]};
+const EX={en:['Sorry, I was busy!','Sorry, I stepped out for a bit.','My bad, I was stuck in another class.'],tl:['Sorry, busy ako kanina!','Uy sorry, may pinasa pa kasi ako.','Pasensya na, na-late ako, traffic sa daan.']};
+const BUSY={en:'Sorry, I was busy for a sec. Say that again?',tl:'Sorry, busy ako saglit. Ulitin mo nga?'};
+const langRule=()=>LANG==='tl'?'Write in natural Taglish (Tagalog and English mixed) like Filipino college students really talk: casual, short, not deep Tagalog.':'Write in casual English.';
+function speak(n,t,ms=4200){n.b={t,until:performance.now()+ms}}
+function play(L){L.forEach(([w,t],i)=>setTimeout(()=>{const n=npcs.find(q=>nm(q)===w);if(n){speak(n,t);heard.push(w+': '+t);if(heard.length>8)heard.shift()}},i*2800))}
+async function banter(){
+  const now=performance.now();if(npcs[0].off||banterBusy||now<banterAt||document.hidden||chat)return;
+  banterAt=now+11000+Math.random()*6000;
+  if(!(AIB&&aiOk&&sampleFn&&now-lastAI>45000&&aiCalls<6)){play(CANNED[LANG][Math.floor(Math.random()*CANNED[LANG].length)]);return}
+  banterBusy=true;lastAI=now;aiCalls++;const a=npcs[Math.floor(Math.random()*npcs.length)];let b;do{b=npcs[Math.floor(Math.random()*npcs.length)]}while(b===a);
+  try{const r=await sampleFn('You write short chatter between college students and their instructor in a Filipino university computer lab game. '+langRule()+' '+npcs.map(n=>n.ai.persona.replace('You are ','')).join(' ')+' Recent chatter: '+heard.slice(-3).join(' | ')+'\nWrite 3 short lines (max 12 words each) of natural banter, starting with '+nm(a)+' talking to '+nm(b)+', alternating speakers. School-appropriate, no markdown. Format exactly "Name: line", one per line.',{modelTier:'quick',cache:false});
+   const L=r.text.split('\n').map(x=>x.match(/^\s*([A-Za-z. ]+?):\s*(.+)$/)).filter(m=>m&&npcs.some(n=>nm(n)===m[1].trim())).slice(0,3).map(m=>[m[1].trim(),m[2].trim().slice(0,90)]);
+   if(L.length)play(L)}catch(e){}
+  banterBusy=false}
+function shout(t){t=t.replace(/[\u0000-\u001f]/g,'').trim().slice(0,60);if(!t)return;myB=t;myBn++;myBUntil=performance.now()+5000;sendPresence(true)}
+$('sayb').onclick=()=>{shout($('say').value);$('say').value=''};
+$('say').addEventListener('keydown',e=>{if(e.key==='Enter'){shout($('say').value);$('say').value=''}});
+document.querySelectorAll('.em').forEach(b=>b.onclick=()=>shout(b.textContent));
+$('hair').onclick=()=>{P.hs=(P.hs+1)%4;saveMe();sendPresence(true)};
+(async()=>{try{sampleFn=window.claude?await claude.use('sample'):null}catch(e){sampleFn=null}})();
+function addLog(who,text){const d=document.createElement('div'),b=document.createElement('b'),s=document.createElement('span');b.textContent=who+':';s.textContent=text;d.append(b,s);logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;return s}
+function closeChat(){chat=null;chatEl.hidden=true}
+function interact(){
+  const sp=seatNear();if(sp){P.sit=true;P.x=sp.x;P.y=sp.y;P.f='u';sendPresence(true);return}
+  const it=nearest();if(!it)return;
+  if(it.ai){if(!chat||chat.it!==it){chat={it,turns:[],busy:false};logEl.innerHTML='';addLog(it.n,it.ai.greet[LANG]);chatEl.hidden=false;talk=null}inp.focus();return}
+  closeChat();const key=it.n+it.x+it.y,i=idx[key]=((idx[key]??-1)+1)%it.lines.length;talk={it,line:it.lines[i]};
+}
+async function send(){
+  if(!chat||chat.busy)return;const t=inp.value.trim().slice(0,200);if(!t)return;inp.value='';
+  const my=chat;my.busy=true;addLog('You',t);my.turns.push({role:'user',content:t});const out=addLog(my.it.n,'…');
+  try{
+    if(!sampleFn)throw{code:'none'};
+    let turns=my.turns.slice(-8).map(x=>({...x}));while(turns[0].role!=='user')turns.shift();
+    turns[0].content=my.it.ai.persona+' Overheard in class lately: '+heard.slice(-3).join(' | ')+'. You are a character in a game set in a Filipino university. Reply in character like a real college student or instructor, in 1 to 3 short plain sentences, no markdown, school-appropriate. '+langRule()+' The conversation so far follows; answer the last student message.\n\nStudent: '+turns[0].content;
+    const r=await sampleFn(turns,{modelTier:'quick',cache:false});
+    out.textContent=r.text.trim();aiOk=true;speak(my.it,r.text.trim().slice(0,90),5500);heard.push('Student (to '+nm(my.it)+'): '+t.slice(0,70));heard.push(nm(my.it)+' (to student): '+r.text.trim().slice(0,70));if(heard.length>8)heard.splice(0,heard.length-8);react(my.it,t,r.text.trim());my.turns.push({role:'assistant',content:r.text.trim()});
+  }catch(e){
+    my.turns.pop();out.textContent=e&&e.code==='not_granted'?'(AI replies are turned off. Allow Claude when asked to hear me properly.)':BUSY[LANG];
+  }
+  my.busy=false;
+}
+$('send').onclick=send;$('close').onclick=closeChat;
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send()}});
+
+/* quiz game */
+const BANK=[
+[5,'word = "PYTHON"   print(word[-1])   Output?',['P','N','O','Error'],1,'Negative index counts from the right, so -1 is the last character.'],
+[5,'print("Programming"[3:8])   Output?',['gramm','ogram','gramm','rammi'].map((t,i)=>i==2?'gramm ':t),0,'Slicing includes start (3) and excludes stop (8): g-r-a-m-m.'],
+[5,'In string[start:stop], the stop index is...',['included','excluded','ignored','negative only'],1,'The stop index is excluded.'],
+[5,'"Java" not in "Python Programming"  →',['False','Error','True','None'],2,'not in checks absence. Java is absent, so True.'],
+[6,'Which collection is ordered AND mutable?',['Tuple','Set','List','String'],2,'List: ordered and mutable. Tuple is ordered but immutable.'],
+[6,'A = {1,2,3}, B = {3,4,5}.  A | B  →',['{3}','{1, 2}','{1, 2, 3, 4, 5}','{4, 5}'],2,'| is union: everything combined, no duplicates.'],
+[6,'Which collection cannot be indexed?',['List','Set','Tuple','String'],1,'Sets are unordered, so they cannot be indexed.'],
+[6,'A = {1,2,3}, B = {3,4,5}.  A - B  →',['{1, 2}','{3}','{4, 5}','{1, 2, 3}'],0,'Difference: items unique to the first set.'],
+[7,'def multiply(a, b): ...   What are a and b?',['arguments','parameters','returns','modules'],1,'Parameters are in the definition; arguments are the values you pass.'],
+[7,'What does return do?',['displays a value','sends a value back','imports a module','ends the program'],1,'return sends a value back. print() only displays it.'],
+[7,'square = lambda x: x * x   print(square(5))  →',['10','5','25','Error'],2,'A lambda is an anonymous one-expression function: 5*5 = 25.'],
+[7,'A variable created inside a function is...',['global','local','constant','a module'],1,'Local variables normally live only inside their function.'],
+[8,'What does the base case do in recursion?',['starts it','stops it','repeats it','imports it'],1,'The base case stops the recursion.'],
+[8,'print(factorial(5))   Output?',['25','60','120','5'],2,'5 x 4 x 3 x 2 x 1 = 120.'],
+[8,'print(next(iter([10, 20])))   Output?',['10','20','[10, 20]','Error'],0,'iter() makes the iterator; next() gets the first value: 10.'],
+[8,'from math import sqrt   print(sqrt(64))  →',['8','8.0','64.0','Error'],1,'sqrt returns a float: 8.0.']];
+BANK[1][2]=['rammi','ogram','gramm','Program'];BANK[1][3]=2;
+const G={custom:[],ci:-1,rs:0,cq:null,tm:20,adm:[],kk:[],host:false,code:'',qn:0,qi:-1,ph:'idle',mod:0,score:0,an:-1};let lastQn=-1,lastRs=-1,curPh='',curQn=-1,t0=0,myAns=-1,done=false;
+const hostCtl=()=>G.host||!room;
+async function enter(code,host){
+  if(!R){$('rm').textContent='Multiplayer needs you signed in to claude.ai.';return}
+  try{room=await R.join('cc-'+code)}catch(e){$('rm').textContent='Could not join that class.';return}
+  ['host','code','join'].forEach(i=>$(i).classList.add('hide'));Object.assign(G,{adm:[],kk:[],host,code,qn:0,qi:-1,ph:'idle',score:0,an:-1});lastQn=-1;location.hash=code;sendPresence(true);
+  $('rm').textContent=(host?'You are the teacher. ':'')+'Class code: '+code.toUpperCase()+(host?'  (Share > Copy link also joins people)':'')}
+$('host').onclick=()=>enter(Array.from({length:5},()=>'abcdefghjkmnpqrstuvwxyz23456789'[Math.random()*31|0]).join(''),true);
+$('join').onclick=()=>{const c=$('code').value.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,5);if(c.length===5)enter(c,false)};
+$('mod').onchange=e=>{G.mod=+e.target.value;G.ci=-1;G.qi=-1};
+$('nx').onclick=nextQ;$('st').onclick=startQuiz;$('en').onclick=endQuiz;
+$('rv').onclick=()=>{G.ph='show';sendPresence(true)};
+let wasOff=false;
+function npcOff(ov){const off=!!room&&(ov.length>0||DOOR.wait);npcs.forEach(n=>n.off=off);if(wasOff&&!off){const n=npcs[1+Math.floor(Math.random()*2)],x=EX[LANG];setTimeout(()=>speak(n,x[Math.floor(Math.random()*x.length)],5000),600)}wasOff=off;if(off&&chat&&chat.it.off)closeChat()}
+function renderQ(S){
+  const o=$('qo');o.innerHTML='';$('qe').textContent='';
+  if(S.ph==='end'){$('qt').textContent='🏆 Quiz finished! Final scores:';return}
+  if(!curQ(S)){$('qt').textContent=hostCtl()?'Press “Start quiz” to begin.':'Waiting for the teacher to start…';return}
+  const q=curQ(S);$('qt').textContent=(q[0]==='T'?'Teacher':'Module '+q[0])+': '+q[1];
+  q[2].forEach((t,i)=>{const b=document.createElement('button');b.className='opt';b.textContent='ABCD'[i]+'. '+t;
+   b.onclick=()=>{if(myAns>=0||done)return;myAns=i;G.an=S.qn;b.classList.add('sel');sendPresence(true)};o.appendChild(b)});
+  if(!npcs[0].off)speak(npcs[0],(LANG==='tl'?'Quiz time!':'Question time!')+(q[0]==='T'?'':' Module '+q[0]+'.'),3500)}
+function showRev(q,pts){[...$('qo').children].forEach((b,i)=>{b.classList.toggle('ok',i===q[3]);if(i===myAns&&i!==q[3])b.classList.add('no')});
+  $('qe').textContent=(myAns===q[3]?'Correct! +'+pts+'. ':myAns<0?'Time is up. ':'Not quite. ')+q[4]}
+function quizTick(ov){
+  const hp=ov.filter(o=>o.h).sort((a,b)=>a.id<b.id?-1:1)[0];
+  const S=(!room||G.host)?G:hp?hp:{qn:-2,qi:-1,ph:'idle'};
+  ['quiz','sayrow','lb'].forEach(i=>$(i).classList.toggle('hide',!!DOOR.wait));$('qh').classList.toggle('hide',!hostCtl());curQn=S.qn;$('ed').classList.toggle('hide',!hostCtl()||!!DOOR.wait);if(S.rs!==undefined&&S.rs!==lastRs){lastRs=S.rs;G.score=0;sendPresence(true)}
+  if(S.qn!==lastQn){lastQn=S.qn;t0=performance.now();myAns=-1;done=false;renderQ(S)}
+  curPh=S.ph;if(S.ph==='end')return;const q=curQ(S);if(!q)return;const left=Math.max(0,(S.tm||20)-(performance.now()-t0)/1000),rev=S.ph==='show'||left<=0;
+  if(rev&&!done){done=true;const pts=100+Math.round(left*5);if(myAns===q[3])G.score+=pts;sendPresence(true);showRev(q,pts)}
+  $('qs').textContent=rev?'':'Time left: '+Math.ceil(left)+'s'}
+setInterval(()=>{doorUI();const a=standings().slice(0,6);if(curPh==='end')$('qe').textContent=['🥇','🥈','🥉'].map((m,i)=>a[i]?m+' '+a[i].n+' '+a[i].s:'').filter(Boolean).join('   ');
+  $('lb').textContent='🏆 '+a.map(p=>p.n+(p.you?' (you)':'')+' '+p.s).join('  ·  ')},700);
+$('lang').textContent=LANG==='tl'?'Taglish':'English';
+$('lang').onclick=()=>{LANG=LANG==='tl'?'en':'tl';try{localStorage.setItem('cc_lang',LANG)}catch(e){}$('lang').textContent=LANG==='tl'?'Taglish':'English'};
+$('aib').onclick=()=>{AIB=!AIB;$('aib').textContent='AI banter: '+(AIB?'on':'off')};
+/* door: waiting room + kick */
+const DOOR={wait:false,hasHost:false,waiting:[],inside:[]};let doorSig='';
+function gate(out){
+  if(!room){DOOR.wait=false;DOOR.waiting=[];DOOR.inside=[];return out}
+  const me=room.peers().find(p=>p.isMe&&p.sameTab),id=me&&me.peer;
+  if(G.host){DOOR.wait=false;DOOR.waiting=out.filter(o=>!G.adm.includes(o.id)&&!G.kk.includes(o.id));DOOR.inside=out.filter(o=>G.adm.includes(o.id));return DOOR.inside}
+  const hs=out.filter(o=>o.h).sort((a,b)=>a.id<b.id?-1:1)[0];DOOR.hasHost=!!hs;DOOR.waiting=[];DOOR.inside=[];
+  if(hs&&id&&hs.kk.includes(id)){kickedOut();return[]}
+  const ok=!!hs&&!!id&&hs.adm.includes(id);DOOR.wait=!ok;
+  return ok?out.filter(o=>o.id===hs.id||hs.adm.includes(o.id)):[]}
+function kickedOut(){if(!room)return;const r=room;room=null;r.leave();G.host=false;DOOR.wait=false;location.hash='';
+  ['host','code','join'].forEach(i=>$(i).classList.remove('hide'));$('rm').textContent='The teacher removed you from the class.'}
+const btn=(t,f)=>{const b=document.createElement('button');b.textContent=t;b.onclick=f;return b};
+function doorUI(){const d=$('door');
+  if(DOOR.wait){d.classList.remove('hide');d.textContent=DOOR.hasHost?'🚪 You are waiting at the door. The teacher will let you in.':'🚪 Waiting for the teacher to open the class…';doorSig='';return}
+  if(!(room&&G.host)){d.classList.add('hide');return}
+  const sig=DOOR.waiting.map(w=>w.id+w.name).join('|')+'#'+DOOR.inside.map(w=>w.id+w.name).join('|');if(sig===doorSig)return;doorSig=sig;
+  d.innerHTML='';d.classList.toggle('hide',!DOOR.waiting.length&&!DOOR.inside.length);
+  const kick=w=>btn('Kick',()=>{G.kk.push(w.id);G.adm=G.adm.filter(x=>x!==w.id);sendPresence(true)});
+  if(DOOR.waiting.length){const t=document.createElement('b');t.textContent='🚪 At the door: ';d.appendChild(t);
+   DOOR.waiting.forEach(w=>{const sp=document.createElement('span');sp.textContent=w.name;d.append(sp,btn('Admit',()=>{G.adm.push(w.id);sendPresence(true)}),kick(w))});
+   d.appendChild(btn('Admit all',()=>{DOOR.waiting.forEach(w=>G.adm.push(w.id));sendPresence(true)}))}
+  if(DOOR.inside.length){const t=document.createElement('b');t.textContent=' In class: ';d.appendChild(t);
+   DOOR.inside.forEach(w=>{const sp=document.createElement('span');sp.textContent=w.name;d.append(sp,kick(w))})}}
+/* teacher quiz tools */
+const curQ=S=>S.cq?['T',S.cq.t,S.cq.o,S.cq.a,S.cq.e]:S.qi>=0?BANK[S.qi]:null;
+const standings=()=>[...(G.host?[]:[{n:myName(),s:G.score,you:1}]),...others().filter(o=>!o.h).map(o=>({n:o.name,s:o.sc}))].sort((a,b)=>b.s-a.s);
+try{G.custom=JSON.parse(localStorage.getItem('cc_custom')||'[]').filter(q=>q&&typeof q.t==='string'&&Array.isArray(q.o)&&q.o.length===4&&Number.isInteger(q.a)).slice(0,50)}catch(e){}
+function nextQ(){
+  if(G.mod===9){if(!G.custom.length){$('qe').textContent='Add at least one question first.';return}
+   if(++G.ci>=G.custom.length)return endQuiz();G.cq=G.custom[G.ci];G.qi=-1}
+  else{const L=BANK.map((q,i)=>i).filter(i=>!G.mod||BANK[i][0]===G.mod);if(++G.ci>=L.length)return endQuiz();G.qi=L[G.ci];G.cq=null}
+  G.tm=Math.max(5,Math.min(120,+$('tm').value||20));G.qn++;G.ph='ask';sendPresence(true)}
+function endQuiz(){if(G.qn<1)return;G.qn++;G.ph='end';sendPresence(true)}
+function startQuiz(){G.rs++;G.ci=-1;G.cq=null;G.qi=-1;nextQ()}
+function renderEd(){const l=$('el');l.innerHTML='';$('ecount').textContent=G.custom.length;
+  G.custom.forEach((q,i)=>{const d=document.createElement('div');d.textContent=(i+1)+'. '+q.t+' → '+'ABCD'[q.a]+' ';d.appendChild(btn('Delete',()=>{G.custom.splice(i,1);renderEd()}));l.appendChild(d)});
+  try{localStorage.setItem('cc_custom',JSON.stringify(G.custom))}catch(e){}}
+$('etog').onclick=()=>$('eb').classList.toggle('hide');
+$('eadd').onclick=()=>{const t=$('eq').value.trim(),o=[0,1,2,3].map(i=>$('e'+i).value.trim());
+  if(!t||o.some(x=>!x)){$('em').textContent='Fill in the question and all 4 answers.';return}
+  G.custom.push({t,o,a:+$('ea').value,e:$('ee').value.trim()});['eq','e0','e1','e2','e3','ee'].forEach(i=>$(i).value='');$('em').textContent='Added. Pick “My questions” and press Start quiz.';renderEd()};
+renderEd();
+/* sitting + NPC reactions */
+let lastOv=[];
+const seats=items.filter(i=>i.chair).map(i=>({x:i.x+29,y:i.y+i.h+3}));
+const seatTaken=q=>lastOv.some(o=>o.sit&&Math.hypot(o.x-q.x,o.y-q.y)<10);
+function seatNear(){if(P.sit)return null;let b=null,bd=26;for(const q of seats){const d=Math.hypot(P.x-q.x,P.y-q.y);if(d<bd&&!seatTaken(q)){bd=d;b=q}}return b}
+const NK=[/reyes|ma['’]?am/i,/\bmia\b/i,/\bjon\b/i],REACT={tl:['Ha? Narinig ko pangalan ko ah.','Uy, ano na naman yan tungkol sa akin?','Chismis ba yan? Sali ako.'],en:['Wait, did I just hear my name?','Hey, what are you saying about me?','Is that gossip? Count me in.']};let reactCalls=0;
+async function react(from,said,reply){
+  const o=npcs.find((n,i)=>n!==from&&NK[i].test(said+' '+reply));if(!o||o.off)return;
+  const L=REACT[LANG],canned=()=>speak(o,L[Math.floor(Math.random()*L.length)],4500);
+  if(!(aiOk&&sampleFn)||reactCalls>=8){setTimeout(canned,1400);return}
+  reactCalls++;
+  try{const r=await sampleFn(o.ai.persona+' '+langRule()+' You overheard this in class. A student said to '+nm(from)+': "'+said+'". '+nm(from)+' answered: "'+reply+'". React in character with ONE short sentence, as if you heard it nearby. No markdown.',{modelTier:'quick',cache:false});
+   const t=r.text.trim().slice(0,100);speak(o,t,5500);heard.push(nm(o)+' (reacting): '+t)}catch(e){canned()}}
+/* drawing */
+function drawChar(px,py,o){
+  if(o.name&&o.an===curQn&&curQn>0)o={...o,name:o.name+' ✓'};if(o.h)o={...o,hs:2,ac:'glasses',cl:'#8a5cc4',name:(o.name||'')+' (T)'};
+  const x=px+9,y=py+18,t=performance.now()/110,st=o.m?Math.sin(t)*3:0,bob=o.m?Math.abs(Math.sin(t))*1.5:Math.sin(t/7+px)*.5+.5;
+  const side=o.f==='l'||o.f==='r',dir=o.f==='r'?1:-1,col=o.cl||COLORS[o.ci],hair=HAIR[o.ci],skin=SKIN[o.ci],hs=o.hs|0,hy=y-25-bob;
+  const R=(a,b,c,d,f)=>{ctx.fillStyle=f;ctx.fillRect(a,b,c,d)};
+  ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(x,y,10,4,0,0,7);ctx.fill();
+  if(hs===1)R(x-8,hy-2,16,15,hair);
+  if(o.sit)R(x-6,y-8,12,5,'#2b3a55');else{R(x-5,y-7-Math.max(0,st),4,6,'#2b3a55');R(x+1,y-7-Math.max(0,-st),4,6,'#2b3a55');
+  R(x-6,y-2-Math.max(0,st),5,3,'#f4f1e8');R(x+1,y-2-Math.max(0,-st),5,3,'#f4f1e8')}
+  const bw=side?10:14;R(x-bw/2,y-19-bob,bw,12,col);R(x-bw/2,y-19-bob,bw,3,'rgba(255,255,255,.22)');R(x-bw/2,y-9-bob,bw,2,'rgba(0,0,0,.18)');
+  if(!side){R(x-9,y-18-bob+st*.3,3,8,col);R(x+6,y-18-bob-st*.3,3,8,col);R(x-9,y-11-bob+st*.3,3,2,skin);R(x+6,y-11-bob-st*.3,3,2,skin)}
+  else{R(x-2+dir*st*.5,y-17-bob,4,8,col);R(x-2+dir*st*.5,y-10-bob,4,2,skin)}
+  ctx.fillStyle=skin;ctx.beginPath();ctx.arc(x,hy,7,0,7);ctx.fill();
+  ctx.fillStyle=hair;ctx.beginPath();ctx.arc(x,hy-1,7.5,Math.PI,0);ctx.fill();
+  if(o.f==='u'){ctx.beginPath();ctx.arc(x,hy,7.5,0,7);ctx.fill()}
+  else if(side)R(x+(dir>0?-7:2),hy-2,5,6,hair);
+  if(hs===2){ctx.fillStyle=hair;ctx.beginPath();ctx.arc(x,hy-9,4,0,7);ctx.fill()}
+  if(hs===3){R(x-7,hy-7,14,4,'#d94b4b');if(o.f==='d')R(x-8,hy-4,16,2,'#b53a3a');else if(side)R(x+(dir>0?4:-10),hy-4,6,2,'#b53a3a')}
+  if(o.f==='d'){R(x-4,hy-1,3,3,'#fff');R(x+1,hy-1,3,3,'#fff');R(x-3,hy,2,2,'#222');R(x+2,hy,2,2,'#222');R(x-1,hy+4,3,1,'#a5503f');R(x-6,hy+3,2,1,'rgba(220,100,100,.55)');R(x+4,hy+3,2,1,'rgba(220,100,100,.55)')}
+  else if(side){R(x+(dir>0?1:-5),hy-1,4,3,'#fff');R(x+(dir>0?3:-5),hy,2,2,'#222')}
+  if(o.ac==='glasses'&&o.f!=='u'){ctx.strokeStyle='#333';ctx.lineWidth=1;if(!side){ctx.strokeRect(x-5,hy-2,5,5);ctx.strokeRect(x+.5,hy-2,5,5);R(x-.5,hy,1,1,'#333')}else ctx.strokeRect(x+(dir>0?1:-6),hy-2,5,5)}
+  if(o.name){ctx.font='bold '+fs+'px Trebuchet MS, sans-serif';ctx.textAlign='center';const w=ctx.measureText(o.name).width+8;
+   ctx.fillStyle=o.you?'rgba(47,107,87,.92)':'rgba(20,20,20,.7)';ctx.fillRect(x-w/2,y-37-fs-bob,w,fs+4);ctx.fillStyle='#fff';ctx.fillText(o.name,x,y-36-bob)}
+  if(o.b)BUB.push({x,y:y-40-fs-bob,t:o.b});
+}
+function wrap(t){const L=[''];for(const w of t.split(' ')){const c=(L[L.length-1]+' '+w).trim();if(c.length>22&&L[L.length-1])L.push(w);else L[L.length-1]=c}return L.slice(0,4)}
+function flushBubbles(){ctx.font='bold '+fs+'px Trebuchet MS, sans-serif';ctx.textAlign='center';
+  for(const b of BUB){const L=wrap(b.t),w=Math.max(...L.map(q=>ctx.measureText(q).width))+12,h=L.length*(fs+2)+8,bx=Math.max(4,Math.min(636-w,b.x-w/2)),by=Math.max(4,b.y-h);
+   ctx.fillStyle='#fffdf4';ctx.strokeStyle='#3a3a3a';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(bx,by,w,h,6);ctx.fill();ctx.stroke();
+   ctx.beginPath();ctx.moveTo(b.x-4,by+h-1);ctx.lineTo(b.x,by+h+5);ctx.lineTo(b.x+4,by+h-1);ctx.fill();
+   ctx.fillStyle='#222';L.forEach((q,i)=>ctx.fillText(q,bx+w/2,by+3+fs+i*(fs+2)))}BUB.length=0}
+function drawFloor(){fs=Math.max(10,Math.min(17,Math.round(9/((cv.clientWidth||640)/640))));
+  for(let ty=0;ty<14;ty++)for(let tx=0;tx<20;tx++){ctx.fillStyle=((tx+ty)&1)?SCENE.floor[0]:SCENE.floor[1];ctx.fillRect(tx*32,ty*32,32,32);ctx.fillStyle='rgba(90,55,20,.12)';ctx.fillRect(tx*32,ty*32+8+((tx*7+ty*3)%3)*8,32,1)}
+  ctx.fillStyle=SCENE.rug;ctx.fillRect(238,110,164,50);ctx.strokeStyle='#e8d9a8';ctx.lineWidth=2;ctx.strokeRect(244,116,152,38)}
+function drawWalls(){
+  ctx.fillStyle=SCENE.wall;walls.forEach(w=>ctx.fillRect(w[0],w[1],w[2],w[3]));ctx.fillStyle=SCENE.trim;ctx.fillRect(32,28,576,4);ctx.fillRect(32,416,576,4);ctx.fillRect(28,32,4,384);ctx.fillRect(608,32,4,384);
+  const d=new Date(),cx=496,cy=16;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(cx,cy,10,0,7);ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=2;ctx.stroke();
+  const hand=(a,l)=>{ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.sin(a)*l,cy-Math.cos(a)*l);ctx.stroke()};ctx.lineWidth=1.5;hand((d.getHours()%12+d.getMinutes()/60)*Math.PI/6,5);hand(d.getMinutes()*Math.PI/30,8);
+  ctx.fillStyle='#f2d16b';ctx.fillRect(612,90,20,26);ctx.fillStyle='#333';ctx.font='bold 8px sans-serif';ctx.textAlign='center';ctx.fillText('</>',622,106)}
+function computer(x,y,w,sc){
+  const mx=x+(w-22)/2;ctx.fillStyle='#2a2f36';ctx.fillRect(mx,y+1,22,14);ctx.fillStyle=SCREENS[sc];ctx.fillRect(mx+2,y+3,18,10);
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(mx+4,y+5,9,2);ctx.fillStyle='#2a2f36';ctx.fillRect(mx+8,y+15,6,3);
+  ctx.fillStyle='#d8dce0';ctx.fillRect(mx+1,y+20,20,5);ctx.fillStyle='#9aa0a6';for(let i=0;i<5;i++)ctx.fillRect(mx+3+i*4,y+22,2,1)
+}
+function drawItem(it){
+  const {x,y,w,h}=it;
+  if(it.k==='board'){ctx.fillStyle='#e8ece8';ctx.fillRect(x,y,w,h);ctx.strokeStyle='#8a8f8a';ctx.lineWidth=2;ctx.strokeRect(x,y,w,h);ctx.strokeStyle='#2f6b57';ctx.beginPath();ctx.moveTo(x+14,y+9);ctx.lineTo(x+150,y+9);ctx.moveTo(x+14,y+16);ctx.lineTo(x+90,y+16);ctx.stroke();return}
+  if(it.k==='win'){ctx.fillStyle='#9fd3ee';ctx.fillRect(x,y,w,h);ctx.strokeStyle='#f4f1e8';ctx.lineWidth=3;ctx.strokeRect(x,y,w,h);ctx.beginPath();ctx.moveTo(x+w/2,y);ctx.lineTo(x+w/2,y+h);ctx.stroke();return}
+  if(it.k==='door'){ctx.fillStyle='#7a5230';ctx.fillRect(x,y,w,h);ctx.fillStyle='#f2d16b';ctx.beginPath();ctx.arc(x+w-8,y+h/2,2.5,0,7);ctx.fill();return}
+  if(it.k==='shelf'){ctx.fillStyle='#6d4420';ctx.fillRect(x,y,w,h);['#c0507a','#3b82c4','#d98a2b','#3f9a54'].forEach((c,i)=>{ctx.fillStyle=c;ctx.fillRect(x+3,y+6+i*24,16,8)});return}
+  if(it.k==='plant'){ctx.fillStyle='#8a5a2b';ctx.fillRect(x+4,y+16,16,12);ctx.fillStyle='#3f9a54';ctx.beginPath();ctx.arc(x+12,y+10,11,0,7);ctx.fill();return}
+  if(it.k==='desk'){
+    if(it.chair){ctx.fillStyle='#4d6a8a';ctx.fillRect(x+25,y+h+4,26,12);ctx.fillStyle='#3b536e';ctx.fillRect(x+25,y+h+14,26,4)}
+    ctx.fillStyle='rgba(0,0,0,.18)';ctx.fillRect(x+3,y+h,w,5);ctx.fillStyle=it.c;ctx.fillRect(x,y,w,h);ctx.fillStyle='rgba(255,255,255,.16)';ctx.fillRect(x,y,w,3);ctx.fillStyle='rgba(0,0,0,.2)';ctx.fillRect(x,y+h-3,w,3);
+    computer(x,y+1,w,it.sc)
+  }
+}
+function frame(t){
+  const dt=Math.min(.05,(t-(frame.l||t))/1000);frame.l=t;
+  let dx=keys.right-keys.left,dy=keys.down-keys.up;P.m=!!(dx||dy);if(P.sit&&(dx||dy))P.sit=false;
+  if(dx&&dy){dx*=.707;dy*=.707}const s=120*dt;
+  if(dx){P.x+=dx*s;if(hit(P))P.x-=dx*s}if(dy){P.y+=dy*s;if(hit(P))P.y-=dy*s}
+  if(P.m)P.f=(keys.left||keys.right)?(keys.left?'l':'r'):(keys.up?'u':'d');
+  sendPresence();banter();
+  const near=nearest();
+  if(talk&&talk.it!==near)talk=null;
+  if(chat&&chat.it!==near)closeChat();
+  msg.textContent=talk?talk.it.n+': '+talk.line:P.sit?'Sitting. Press E to use the computer, or move to stand up.':seatNear()?'Press E or tap Talk to sit down.':near?'Press E or tap Talk: '+near.n:'Walk around with WASD, arrow keys, or the buttons below.';
+  const ov=others();lastOv=ov;npcOff(ov);quizTick(ov);who.textContent=room?(ov.length?(ov.length+1)+' players here':'Just you (share to play together)'):'Solo';
+  drawFloor();drawWalls();
+  items.filter(i=>i.k!=='npc').forEach(drawItem);
+  const people=[...items.filter(i=>i.k==='npc'&&!i.off).map(n=>({y:n.y,d:()=>drawChar(n.x,n.y,{...LOOK[nm(n)],f:Math.hypot(P.x-n.x,P.y-n.y)<110?(Math.abs(P.x-n.x)>Math.abs(P.y-n.y)?(P.x<n.x?'l':'r'):(P.y<n.y?'u':'d')):'d',ci:n.ci,m:false,name:nm(n),b:n.b&&performance.now()<n.b.until?n.b.t:''})})),
+    ...ov.map(o=>({y:o.y,d:()=>drawChar(o.x,o.y,o)})),{y:P.y,d:()=>drawChar(P.x,P.y,{f:P.f,ci:P.ci,hs:P.hs,h:G.host,an:G.an,sit:P.sit,m:P.m,name:myName(),you:1,b:performance.now()<myBUntil?myB:''})}].sort((a,b)=>a.y-b.y);
+  people.forEach(p=>p.d());
+  {const g=ctx.createRadialGradient(320,224,130,320,224,420);g.addColorStop(0,'rgba(255,240,200,0)');g.addColorStop(1,'rgba(20,10,0,.3)');ctx.fillStyle=g;ctx.fillRect(0,0,640,448)}
+  flushBubbles();
+  if(near){ctx.strokeStyle='#f2d16b';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.strokeRect(near.x-3,near.y-3,near.w+6,near.h+6);ctx.setLineDash([])}
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
