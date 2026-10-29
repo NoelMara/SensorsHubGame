@@ -85,7 +85,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
   </div>
   <div class="row" id="sayrow" style="margin-top:8px"><input id="say" maxlength="60" placeholder="Say to everyone nearby…" aria-label="Say to other players"><button id="sayb">Say</button><button class="em" aria-label="Wave">👋</button><button class="em" aria-label="Laugh">😂</button><button class="em" aria-label="Question">❓</button></div>
   </section>
-        <section data-pane="you" role="tabpanel"><div class="card"><span>Shirt</span><div class="sw" id="sw" role="group" aria-label="Shirt color"></div><button id="hair">Hair</button><button id="lang"></button><button id="aib">AI banter: off</button></div>
+        <section data-pane="you" role="tabpanel"><div class="card"><span>Shirt</span><div class="sw" id="sw" role="group" aria-label="Shirt color"></div><button id="hair">Hair</button><button id="lang"></button></div>
           <p class="hint">Move: WASD or arrows. Talk, sit or use a computer: E. Host a class and share the code or the page link; the host is the teacher and runs the quiz. Ms. Reyes, Mia and Jon only show up when you are alone.</p></section>
       </div>
     </aside>
@@ -193,18 +193,12 @@ function play(L){L.forEach(([w,t],i)=>setTimeout(()=>{const n=npcs.find(q=>nm(q)
 async function banter(){
   const now=performance.now();if(npcs[0].off||banterBusy||now<banterAt||document.hidden||chat)return;
   banterAt=now+11000+Math.random()*6000;
-  if(!(AIB&&aiOk&&sampleFn&&now-lastAI>45000&&aiCalls<6)){play(CANNED[LANG][Math.floor(Math.random()*CANNED[LANG].length)]);return}
-  banterBusy=true;lastAI=now;aiCalls++;const a=npcs[Math.floor(Math.random()*npcs.length)];let b;do{b=npcs[Math.floor(Math.random()*npcs.length)]}while(b===a);
-  try{const r=await sampleFn('You write short chatter between college students and their instructor in a Filipino university computer lab game. '+langRule()+' '+npcs.map(n=>n.ai.persona.replace('You are ','')).join(' ')+' Recent chatter: '+heard.slice(-3).join(' | ')+'\nWrite 3 short lines (max 12 words each) of natural banter, starting with '+nm(a)+' talking to '+nm(b)+', alternating speakers. School-appropriate, no markdown. Format exactly "Name: line", one per line.',{modelTier:'quick',cache:false});
-   const L=r.text.split('\n').map(x=>x.match(/^\s*([A-Za-z. ]+?):\s*(.+)$/)).filter(m=>m&&npcs.some(n=>nm(n)===m[1].trim())).slice(0,3).map(m=>[m[1].trim(),m[2].trim().slice(0,90)]);
-   if(L.length)play(L)}catch(e){}
-  banterBusy=false}
+  play(CANNED[LANG][Math.floor(Math.random()*CANNED[LANG].length)])}
 function shout(t){t=t.replace(/[\u0000-\u001f]/g,'').trim().slice(0,60);if(!t)return;myB=t;myBn++;myBUntil=performance.now()+5000;sendPresence(true)}
 $('sayb').onclick=()=>{shout($('say').value);$('say').value=''};
 $('say').addEventListener('keydown',e=>{if(e.key==='Enter'){shout($('say').value);$('say').value=''}});
 document.querySelectorAll('.em').forEach(b=>b.onclick=()=>shout(b.textContent));
 $('hair').onclick=()=>{P.hs=(P.hs+1)%4;saveMe();sendPresence(true)};
-(async()=>{try{sampleFn=window.claude?await claude.use('sample'):null}catch(e){sampleFn=null}})();
 function addLog(who,text){const d=document.createElement('div'),b=document.createElement('b'),s=document.createElement('span');b.textContent=who+':';s.textContent=text;d.append(b,s);logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;return s}
 function closeChat(){chat=null;chatEl.hidden=true}
 function interact(){
@@ -213,19 +207,28 @@ function interact(){
   if(it.ai){if(!chat||chat.it!==it){chat={it,turns:[],busy:false};logEl.innerHTML='';addLog(it.n,it.ai.greet[LANG]);chatEl.hidden=false;talk=null}inp.focus();return}
   closeChat();const key=it.n+it.x+it.y,i=idx[key]=((idx[key]??-1)+1)%it.lines.length;talk={it,line:it.lines[i]};
 }
+const RULES=[['hi',/\b(hi|hello|hey|uy|kumusta|musta)\b|good (morning|afternoon)/i],['rec',/recurs|base case|factorial/i],['ds',/\b(list|tuple|set|slice|slicing|string|index)\b/i],['fn',/lambda|function|param|argument|return|\bdef\b/i],['code',/python|code|coding|program/i],['quiz',/quiz|exam|midterm|review|\btest\b/i],['dl',/deadline|requirement|activity|assignment|homework|pasa/i],['game',/game|mobile legends|\bml\b|valorant|dota/i],['thx',/thank|salamat/i],['bye',/\bbye\b|paalam|alis na/i]];
+/* each topic: [Ms. Reyes, Mia, Jon], each [Taglish, English] */
+const RP={
+hi:[["Good morning! Ano ang maitutulong ko?","Good morning! How can I help?"],["Uy! Kumusta? Nag-review ka na ba?","Hi! Have you reviewed yet?"],["Uy, ano meron? Puyat ako, sorry.","Hey, what is up? I am so sleepy."]],
+code:[["Sa coding, practice lang talaga. I-run mo yung code mo step by step.","For coding, practice is key. Run your code step by step."],["Gusto ko mag-code! Start ka sa maliit na program muna.","I love coding! Start with a small program first."],["Coding? Mamaya na, after ng isang round ng laro.","Coding? Later, after one more game."]],
+rec:[["Sa recursion, laging may base case para tumigil. Isipin mo yung factorial.","Recursion always needs a base case to stop. Think of factorial."],["Base case lang yan, tapos tinatawag mo ulit yung function sa mas maliit na problema.","It is just a base case, then the function calls itself on a smaller problem."],["Recursion? Naloloka ako diyan. Function na tumatawag sa sarili niya, di ba?","Recursion? It confuses me. A function that calls itself, right?"]],
+ds:[["Ang list ay ordered at mutable, ang tuple ay immutable, at ang set ay walang duplicate.","Lists are ordered and mutable, tuples are immutable, and sets have no duplicates."],["Tandaan mo: list [ ], tuple ( ), set { }. Si set, hindi pwedeng i-index.","Remember: list [ ], tuple ( ), set { }. Sets cannot be indexed."],["Set? Yung walang pakialam sa order? Gets ko na yan, sort of.","Sets? The ones that ignore order? I sort of get it."]],
+fn:[["Ang parameter ay nasa definition, ang argument ay yung ipinapasa mo. Ang return ay nagbabalik ng value.","Parameters are in the definition, arguments are what you pass in. Return sends a value back."],["Ang lambda ay maliit na anonymous function, isang expression lang.","A lambda is a small anonymous function, just one expression."],["Function? Basta gumagana, hindi ko na ginagalaw.","Functions? As long as it works, I do not touch it."]],
+quiz:[["Para sa quiz, aralin ang Modules 5 to 8. Subukan mo yung practice quiz dito.","For the quiz, study Modules 5 to 8. Try the practice quiz here."],["Nag-review na ako ng slicing at sets. Ikaw?","I already reviewed slicing and sets. You?"],["Quiz? Bahala na si Lord, pero sige magre-review ako.","Quiz? Bahala na, but okay, I will review."]],
+dl:[["Pakipasa ang requirements before the deadline ha.","Please submit your requirements before the deadline."],["Ay oo, deadline! Wag mong ipasa ng last minute.","Oh right, the deadline! Do not submit at the last minute."],["Deadline? Joke lang, ginagawa ko na.","Deadline? Just kidding, I am working on it."]],
+game:[["Pwede maglaro, pero tapusin muna ang requirements.","Games are fine after you finish your requirements."],["Baka maubos ang oras mo sa laro. Review muna!","You might lose track of time gaming. Review first!"],["Game? Sakto, nag-rank up ako kagabi!","Game? Perfect, I ranked up last night!"]],
+thx:[["Walang anuman! Tanong ka lang ulit.","You are welcome! Ask anytime."],["Walang problema!","No problem!"],["Sus, wala yun!","Nah, it is nothing!"]],
+bye:[["Sige, ingat. Balik ka kapag may tanong.","Okay, take care. Come back with questions."],["Bye! Kita tayo ulit!","Bye! See you!"],["Sige, balik na ako sa pagkunwaring nagko-code.","Okay, back to pretending to code."]],
+fb:[[["Interesting. Pwede mo bang ipaliwanag pa?","Sige, pag-usapan natin yan sa klase."],["Interesting. Can you tell me more?","Let us talk about that in class."]],[["Ay, ang ganda niyan! Kwento ka pa.","Hmm, di ako sigurado, pero parang tama ka."],["Oh nice, tell me more!","Hmm, not sure, but you might be right."]],[["Ayos yan, pre.","Haha, relate ako diyan."],["Nice one.","Haha, I relate to that."]]]};
+function localReply(n,t){const i=Math.max(0,npcs.indexOf(n)),L=LANG==='tl'?0:1,r=RULES.find(x=>x[1].test(t));if(r)return RP[r[0]][i][L];const f=RP.fb[i][L];return f[Math.floor(Math.random()*f.length)]}
 async function send(){
   if(!chat||chat.busy)return;const t=inp.value.trim().slice(0,200);if(!t)return;inp.value='';
-  const my=chat;my.busy=true;addLog('You',t);my.turns.push({role:'user',content:t});const out=addLog(my.it.n,'…');
-  try{
-    if(!sampleFn)throw{code:'none'};
-    let turns=my.turns.slice(-8).map(x=>({...x}));while(turns[0].role!=='user')turns.shift();
-    turns[0].content=my.it.ai.persona+' Overheard in class lately: '+heard.slice(-3).join(' | ')+'. You are a character in a game set in a Filipino university. Reply in character like a real college student or instructor, in 1 to 3 short plain sentences, no markdown, school-appropriate. '+langRule()+' The conversation so far follows; answer the last student message.\n\nStudent: '+turns[0].content;
-    const r=await sampleFn(turns,{modelTier:'quick',cache:false});
-    out.textContent=r.text.trim();aiOk=true;speak(my.it,r.text.trim().slice(0,90),5500);heard.push('Student (to '+nm(my.it)+'): '+t.slice(0,70));heard.push(nm(my.it)+' (to student): '+r.text.trim().slice(0,70));if(heard.length>8)heard.splice(0,heard.length-8);react(my.it,t,r.text.trim());my.turns.push({role:'assistant',content:r.text.trim()});
-  }catch(e){
-    my.turns.pop();out.textContent=e&&e.code==='not_granted'?'(AI replies are turned off. Allow Claude when asked to hear me properly.)':BUSY[LANG];
-  }
-  my.busy=false;
+  const my=chat;my.busy=true;addLog('You',t);const out=addLog(my.it.n,'…');
+  await new Promise(r=>setTimeout(r,500+Math.random()*500));
+  const rep=localReply(my.it,t);out.textContent=rep;speak(my.it,rep.slice(0,90),5500);
+  heard.push('Student (to '+nm(my.it)+'): '+t.slice(0,70));heard.push(nm(my.it)+': '+rep.slice(0,70));if(heard.length>8)heard.splice(0,heard.length-8);
+  react(my.it,t,rep);my.busy=false;
 }
 $('send').onclick=send;$('close').onclick=closeChat;
 inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send()}});
@@ -285,7 +288,6 @@ setInterval(()=>{doorUI();const a=standings().slice(0,6);if(curPh==='end')$('qe'
   $('lb').textContent='🏆 '+a.map(p=>p.n+(p.you?' (you)':'')+' '+p.s).join('  ·  ')},700);
 $('lang').textContent=LANG==='tl'?'Taglish':'English';
 $('lang').onclick=()=>{LANG=LANG==='tl'?'en':'tl';try{localStorage.setItem('cc_lang',LANG)}catch(e){}$('lang').textContent=LANG==='tl'?'Taglish':'English'};
-$('aib').onclick=()=>{AIB=!AIB;$('aib').textContent='AI banter: '+(AIB?'on':'off')};
 /* door: waiting room + kick */
 const DOOR={wait:false,hasHost:false,waiting:[],inside:[]};let doorSig='';
 function gate(out){
@@ -335,13 +337,7 @@ const seats=items.filter(i=>i.chair).map(i=>({x:i.x+29,y:i.y+i.h+3}));
 const seatTaken=q=>lastOv.some(o=>o.sit&&Math.hypot(o.x-q.x,o.y-q.y)<10);
 function seatNear(){if(P.sit)return null;let b=null,bd=26;for(const q of seats){const d=Math.hypot(P.x-q.x,P.y-q.y);if(d<bd&&!seatTaken(q)){bd=d;b=q}}return b}
 const NK=[/reyes|ma['’]?am/i,/\bmia\b/i,/\bjon\b/i],REACT={tl:['Ha? Narinig ko pangalan ko ah.','Uy, ano na naman yan tungkol sa akin?','Chismis ba yan? Sali ako.'],en:['Wait, did I just hear my name?','Hey, what are you saying about me?','Is that gossip? Count me in.']};let reactCalls=0;
-async function react(from,said,reply){
-  const o=npcs.find((n,i)=>n!==from&&NK[i].test(said+' '+reply));if(!o||o.off)return;
-  const L=REACT[LANG],canned=()=>speak(o,L[Math.floor(Math.random()*L.length)],4500);
-  if(!(aiOk&&sampleFn)||reactCalls>=8){setTimeout(canned,1400);return}
-  reactCalls++;
-  try{const r=await sampleFn(o.ai.persona+' '+langRule()+' You overheard this in class. A student said to '+nm(from)+': "'+said+'". '+nm(from)+' answered: "'+reply+'". React in character with ONE short sentence, as if you heard it nearby. No markdown.',{modelTier:'quick',cache:false});
-   const t=r.text.trim().slice(0,100);speak(o,t,5500);heard.push(nm(o)+' (reacting): '+t)}catch(e){canned()}}
+function react(from,said,reply){const o=npcs.find((n,i)=>n!==from&&NK[i].test(said+' '+reply));if(!o||o.off)return;const L=REACT[LANG];setTimeout(()=>speak(o,L[Math.floor(Math.random()*L.length)],4500),1400)}
 /* tabs */
 let tab='class',wasChat=false;
 function setTab(t){tab=t;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));document.querySelectorAll('[data-pane]').forEach(p=>p.classList.toggle('hide',p.dataset.pane!==t))}
