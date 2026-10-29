@@ -74,6 +74,9 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:1
  .side{position:fixed;z-index:10;top:0;right:0;bottom:0;width:min(360px,52vw);height:auto;max-height:none;padding:10px 12px;padding-right:calc(12px + env(safe-area-inset-right,0px));background:var(--bg);background:color-mix(in srgb,var(--bg) 76%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.35);transform:translateX(105%);transition:transform .2s}
  .side.open{transform:none}
 }
+#pc .pcwin{--bg:#14201d;--card:#1b2a26;--fg:#e4ede9;--line:#3d504a;--accent:#6fc2a3;--accent-fg:#10201a;color:var(--fg);background:#14201d;border:12px solid #3a4743;border-bottom-width:20px;border-radius:18px;padding:0;gap:0;box-shadow:0 14px 36px rgba(0,0,0,.55),inset 0 0 50px rgba(111,194,163,.12)}
+#pc .pcbar{background:#22332f;padding:6px 10px;border-bottom:1px solid var(--line)}#pc .pcbar b::before{content:"●●● ";letter-spacing:2px;color:#6fc2a3;opacity:.75}
+#pc #pcb{padding:12px}.pcrow .opt{border:1px solid var(--line);border-radius:10px}
 #pc{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:12px}
 .pcwin{width:min(480px,100%);max-height:100%;overflow:auto;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
 .pcbar{display:flex;justify-content:space-between;align-items:center}#pcx{width:40px;height:40px}
@@ -157,19 +160,33 @@ addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(map[k])keys[map[k]]=
 document.querySelectorAll('[data-d]').forEach(b=>{const d=b.dataset.d,on=e=>{keys[d]=1;e.preventDefault()},off=()=>{keys[d]=0};
  b.addEventListener('pointerdown',on);['pointerup','pointerleave','pointercancel'].forEach(t=>b.addEventListener(t,off))});
 $('talk').addEventListener('pointerdown',e=>{e.preventDefault();interact()});
-let pcOpen=false,PCS='';const PCI={menu:'💻',type:'⌨️',quiz:'🐍',code:'🧑‍💻'};const setPC=x=>{PCS=x;sendPresence(true)};const pcEl=$('pc'),pcb=$('pcb');
+let pcOpen=false,PCS='',PSV=null,wt=0;const PCI={menu:'💻',type:'⌨️',quiz:'🐍',code:'🧑‍💻'};const setPC=x=>{PCS=x;sendPresence(true)},setSV=o=>{PSV=o;sendPresence(true)};const pcEl=$('pc'),pcb=$('pcb');
 const TYPE=['Practice makes progress.','A function can call itself.','Every list starts at index zero.','The base case stops the recursion.','Save your work before you log off.'];
 const mk=(tag,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;return e};
-function pcClose(){setPC('');pcOpen=false;pcEl.classList.add('hide');pcb.innerHTML=''}
+function watchable(){if(P.sit||pcOpen)return null;let b=null,bd=48;for(const o of lastOv){if(!o.pc)continue;const d=Math.hypot(o.x-P.x,o.y-P.y);if(d<bd){bd=d;b=o}}return b}
+function viewOf(c){const d=mk('div'),s=c.sv||{},k=s.k||c.pc,n=mk('p','hint');d.style.cssText='display:flex;flex-direction:column;gap:10px';
+  if(k==='type'){const t=TYPE[s.i]||'',v=s.v||'',g=mk('div','tg');[...t].forEach((ch,j)=>{const e=mk('span',j<v.length?(v[j]===ch?'ok':'bad'):j===v.length?'cur':'');e.textContent=ch;g.appendChild(e)});n.textContent=v===t?'Finished!':'Typing… '+v.length+'/'+t.length;d.append(g,n)}
+  else if(k==='quiz'&&BANK[s.i]){const q=BANK[s.i],h=mk('div','tg'),o=mk('div','pcrow');h.textContent='Module '+q[0]+': '+q[1];
+    q[2].forEach((x,j)=>{const b=mk('div','opt');b.textContent='ABCD'[j]+'. '+x;if(s.a>=0){b.classList.toggle('ok',j===q[3]);if(j===s.a&&j!==q[3])b.classList.add('no')}o.appendChild(b)});n.textContent=s.a<0?'Thinking about the answer…':'Answered.';d.append(h,o,n)}
+  else if(k==='code'&&CODE[s.i]){const q=CODE[s.i],pre=mk('pre','tg');pre.style.cssText='margin:0;white-space:pre-wrap';pre.textContent=q[0].replace('____',s.r===2?q[1][0]:(s.v||(s.r===1?q[1][0]:'____')));
+    n.textContent=s.r===1?'✅ Solved. Output: '+q[2]:s.r===2?'Showing the answer.':'Typing the answer…';d.append(pre,n)}
+  else{n.textContent='Choosing an activity…';d.append(n)}
+  return d}
+function openWatch(o){pcOpen=true;pcEl.classList.remove('hide');const id=o.id;$('pct').textContent=o.name+'’s screen';
+  const draw=()=>{const c=lastOv.find(x=>x.id===id);pcb.innerHTML='';
+    if(!c||!c.pc){const m=mk('p');m.textContent=o.name+' left the computer.';pcb.appendChild(m);clearInterval(wt);return}
+    pcb.appendChild(viewOf(c))};
+  clearInterval(wt);draw();wt=setInterval(draw,250);$('pcx').focus()}
+function pcClose(){clearInterval(wt);PSV=null;setPC('');pcOpen=false;pcEl.classList.add('hide');pcb.innerHTML=''}
 function openPC(it){pcOpen=true;pcEl.classList.remove('hide');$('pct').textContent=it.n;pcMenu()}
-function pcMenu(){setPC('menu');pcb.innerHTML='';const r=mk('div','pcrow'),a=btn('⌨️ Typing challenge',pcType),b=btn('🐍 Python question',pcQuiz),c=btn('🧑‍💻 Coding lab',pcCode);a.className=b.className=c.className='big';r.append(a,b,c);
+function pcMenu(){setPC('menu');setSV({k:'menu'});pcb.innerHTML='';const r=mk('div','pcrow'),a=btn('⌨️ Typing challenge',pcType),b=btn('🐍 Python question',pcQuiz),c=btn('🧑‍💻 Coding lab',pcCode);a.className=b.className=c.className='big';r.append(a,b,c);
   const h=mk('p','hint');h.textContent='Pick an activity. Press Esc or ✕ to go back to your seat.';pcb.append(r,h);a.focus()}
-function pcType(){setPC('type');const t=TYPE[Math.random()*TYPE.length|0];pcb.innerHTML='';
+function pcType(){setPC('type');const ti=Math.random()*TYPE.length|0,t=TYPE[ti];setSV({k:'type',i:ti,v:''});pcb.innerHTML='';
   const g=mk('div','tg'),i=mk('input'),res=mk('div');g.setAttribute('aria-label','Text to type: '+t);
   const sp=[...t].map(c=>{const e=mk('span');e.textContent=c;g.appendChild(e);return e});
   i.autocomplete='off';i.autocapitalize='off';i.spellcheck=false;i.setAttribute('aria-label','Type the text above');res.setAttribute('aria-live','polite');let st=0,done=false;
   const paint=()=>{const v=i.value;sp.forEach((e,k)=>{e.className=k<v.length?(v[k]===t[k]?'ok':'bad'):k===v.length?'cur':''})};
-  i.oninput=()=>{if(done)return;if(!st)st=performance.now();paint();
+  i.oninput=()=>{if(done)return;if(!st)st=performance.now();paint();setSV({k:'type',i:ti,v:i.value.slice(0,60)});
     if(i.value===t){done=true;i.disabled=true;const m=Math.max((performance.now()-st)/60000,.0083);res.textContent='Done! '+Math.round(t.length/5/m)+' words per minute. ';res.append(btn('Try another',pcType),btn('Back',pcMenu))}};
   pcb.append(g,i,res);paint();i.focus()}
 const CODE=[
@@ -181,20 +198,20 @@ const CODE=[
 ['from math import ____\nprint(sqrt(49))',['sqrt'],'7.0','sqrt returns a float.'],
 ['add = ____ a, b: a + b\nprint(add(2, 3))',['lambda'],'5','A lambda is a small anonymous function.'],
 ['for i in ____(3):\n    print(i)',['range'],'0, 1, 2','range(3) gives 0, 1 and 2.']];
-function pcCode(){setPC('code');const q=CODE[Math.random()*CODE.length|0];pcb.innerHTML='';
+function pcCode(){setPC('code');const ci=Math.random()*CODE.length|0,q=CODE[ci];setSV({k:'code',i:ci,v:'',r:0});pcb.innerHTML='';
   const pre=mk('pre','tg'),i=mk('input'),res=mk('div'),run=btn('Run code',check);let tries=0,done=false;
   pre.textContent=q[0];pre.style.margin=0;pre.style.whiteSpace='pre-wrap';i.placeholder='Type what goes in the blank';i.autocomplete='off';i.autocapitalize='off';i.spellcheck=false;i.setAttribute('aria-label','Fill in the blank');res.setAttribute('aria-live','polite');
-  const end=t=>{done=true;i.disabled=run.disabled=true;res.textContent=t+' ';res.append(btn('Another challenge',pcCode),btn('Back',pcMenu))};
+  const end=(t,r)=>{setSV({k:'code',i:ci,v:i.value.slice(0,30),r});done=true;i.disabled=run.disabled=true;res.textContent=t+' ';res.append(btn('Another challenge',pcCode),btn('Back',pcMenu))};
   function check(){if(done)return;const v=i.value.trim();if(!v)return;
-    if(q[1].includes(v)){pre.textContent=q[0].replace('____',v);end('✅ Output: '+q[2]+'. '+q[3])}
-    else if(++tries>=2)end('Not quite. The answer is '+q[1][0]+'. '+q[3]);
+    if(q[1].includes(v)){pre.textContent=q[0].replace('____',v);end('✅ Output: '+q[2]+'. '+q[3],1)}
+    else if(++tries>=2)end('Not quite. The answer is '+q[1][0]+'. '+q[3],2);
     else res.textContent='Not quite. Check the blank and run it again.'}
-  i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check()}};
+  i.oninput=()=>setSV({k:'code',i:ci,v:i.value.slice(0,30),r:0});i.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check()}};
   pcb.append(pre,i,run,res);i.focus()}
-function pcQuiz(){setPC('quiz');const q=BANK[Math.random()*BANK.length|0];pcb.innerHTML='';
+function pcQuiz(){setPC('quiz');const qi=Math.random()*BANK.length|0,q=BANK[qi];setSV({k:'quiz',i:qi,a:-1});pcb.innerHTML='';
   const h=mk('div','tg'),o=mk('div','pcrow'),res=mk('div');h.textContent='Module '+q[0]+': '+q[1];res.setAttribute('aria-live','polite');let done=false;
   q[2].forEach((x,k)=>{const b=mk('button','opt');b.textContent='ABCD'[k]+'. '+x;
-    b.onclick=()=>{if(done)return;done=true;[...o.children].forEach((c,j)=>{c.classList.toggle('ok',j===q[3]);if(j===k&&k!==q[3])c.classList.add('no')});
+    b.onclick=()=>{if(done)return;done=true;setSV({k:'quiz',i:qi,a:k});[...o.children].forEach((c,j)=>{c.classList.toggle('ok',j===q[3]);if(j===k&&k!==q[3])c.classList.add('no')});
       res.textContent=(k===q[3]?'Correct! ':'Not quite. ')+q[4]+' ';res.append(btn('Another question',pcQuiz),btn('Back',pcMenu))};o.appendChild(b)});
   pcb.append(h,o,res);o.firstChild.focus()}
 $('pcx').onclick=pcClose;addEventListener('keydown',e=>{if(e.key==='Escape'&&pcOpen)pcClose()});
@@ -215,10 +232,10 @@ const myName=()=>(nick.value.replace(/[^\p{L}\p{N} _.-]/gu,'').trim().slice(0,14
 let room=null,R=null,lastSent=0,lastKey='';const peerPos={},peerB={};
 function sendPresence(force){
   if(!room)return;const now=performance.now();
-  const key=[G.adm.join(),G.kk.join(),G.qn,G.ph,G.score,G.an,G.host,Math.round(P.x),Math.round(P.y),P.f,P.m,P.ci,P.hs,P.sit,PCS,myBn,myName()].join('|');
+  const key=[G.adm.join(),G.kk.join(),G.qn,G.ph,G.score,G.an,G.host,Math.round(P.x),Math.round(P.y),P.f,P.m,P.ci,P.hs,P.sit,PCS,JSON.stringify(PSV),myBn,myName()].join('|');
   if(!force&&(key===lastKey||now-lastSent<50))return;
   lastKey=key;lastSent=now;
-  room.presence({x:Math.round(P.x),y:Math.round(P.y),f:P.f,m:P.m,c:P.ci,h:G.host?1:0,adm:G.adm,kk:G.kk,cq:G.cq,tm:G.tm,rs:G.rs,qn:G.qn,qi:G.qi,ph:G.ph,sc:G.score,an:G.an,hs:P.hs,s:P.sit?1:0,pc:PCS,b:myB,bn:myBn,n:myName()}).catch(()=>{});
+  room.presence({x:Math.round(P.x),y:Math.round(P.y),f:P.f,m:P.m,c:P.ci,h:G.host?1:0,adm:G.adm,kk:G.kk,cq:G.cq,tm:G.tm,rs:G.rs,qn:G.qn,qi:G.qi,ph:G.ph,sc:G.score,an:G.an,hs:P.hs,s:P.sit?1:0,pc:PCS,sv:PSV,b:myB,bn:myBn,n:myName()}).catch(()=>{});
 }
 /* Firebase multiplayer + Google sign-in. Same room API the page already uses: join, peers, presence, leave */
 const NET={err:'',on:null};
@@ -267,7 +284,7 @@ function others(){
     const q=peerPos[p.peer]||(peerPos[p.peer]={x:tx,y:ty});
     q.x+=(tx-q.x)*.3;q.y+=(ty-q.y)*.3;
     const r=peerB[p.peer]||(peerB[p.peer]={bn:-1,until:0}),bn=+d.bn|0;if(bn!==r.bn){r.bn=bn;r.until=bn&&d.b?performance.now()+5000:0}
-    out.push({adm:Array.isArray(d.adm)?d.adm.filter(x=>typeof x==='string').slice(0,150):[],kk:Array.isArray(d.kk)?d.kk.filter(x=>typeof x==='string').slice(0,150):[],id:p.peer,cq:(c=>c&&typeof c.t==='string'&&Array.isArray(c.o)&&c.o.length===4&&Number.isInteger(c.a)&&c.a>=0&&c.a<4?{t:c.t.slice(0,140),o:c.o.map(x=>String(x).slice(0,50)),a:c.a,e:String(c.e||'').slice(0,120)}:null)(d.cq),tm:Math.max(5,Math.min(120,+d.tm||20)),rs:+d.rs|0,sit:d.s===1,pc:/^(menu|type|quiz|code)$/.test(d.pc)?d.pc:'',h:d.h===1,qn:+d.qn|0,qi:Number.isInteger(d.qi)&&d.qi>=0&&d.qi<BANK.length?d.qi:-1,ph:d.ph==='show'||d.ph==='end'?d.ph:'ask',sc:Math.max(0,Math.min(99999,+d.sc|0)),an:+d.an|0,hs:Math.abs(+d.hs|0)%4,b:performance.now()<r.until?String(d.b||'').replace(/[\u0000-\u001f]/g,'').slice(0,60):'',x:q.x,y:q.y,f:'udlr'.includes(d.f)&&d.f.length===1?d.f:'d',m:d.m===true,ci:Math.abs(+d.c|0)%6,name:String(d.n||'Student').replace(/[\u0000-\u001f]/g,'').slice(0,14)});
+    out.push({adm:Array.isArray(d.adm)?d.adm.filter(x=>typeof x==='string').slice(0,150):[],kk:Array.isArray(d.kk)?d.kk.filter(x=>typeof x==='string').slice(0,150):[],id:p.peer,cq:(c=>c&&typeof c.t==='string'&&Array.isArray(c.o)&&c.o.length===4&&Number.isInteger(c.a)&&c.a>=0&&c.a<4?{t:c.t.slice(0,140),o:c.o.map(x=>String(x).slice(0,50)),a:c.a,e:String(c.e||'').slice(0,120)}:null)(d.cq),tm:Math.max(5,Math.min(120,+d.tm||20)),rs:+d.rs|0,sit:d.s===1,pc:/^(menu|type|quiz|code)$/.test(d.pc)?d.pc:'',sv:(v=>v&&typeof v==='object'?{k:String(v.k||'').slice(0,5),i:+v.i|0,v:String(v.v||'').slice(0,60),a:Number.isInteger(v.a)?v.a:-1,r:+v.r|0}:null)(d.sv),h:d.h===1,qn:+d.qn|0,qi:Number.isInteger(d.qi)&&d.qi>=0&&d.qi<BANK.length?d.qi:-1,ph:d.ph==='show'||d.ph==='end'?d.ph:'ask',sc:Math.max(0,Math.min(99999,+d.sc|0)),an:+d.an|0,hs:Math.abs(+d.hs|0)%4,b:performance.now()<r.until?String(d.b||'').replace(/[\u0000-\u001f]/g,'').slice(0,60):'',x:q.x,y:q.y,f:'udlr'.includes(d.f)&&d.f.length===1?d.f:'d',m:d.m===true,ci:Math.abs(+d.c|0)%6,name:String(d.n||'Student').replace(/[\u0000-\u001f]/g,'').slice(0,14)});
   }
   return gate(out);
 }
@@ -311,7 +328,7 @@ document.querySelectorAll('.em').forEach(b=>b.onclick=()=>shout(b.textContent));
 $('hair').onclick=()=>{P.hs=(P.hs+1)%4;saveMe();sendPresence(true)};
 function addLog(who,text){const d=document.createElement('div'),b=document.createElement('b'),s=document.createElement('span');b.textContent=who+':';s.textContent=text;d.append(b,s);logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;return s}
 function closeChat(){chat=null;chatEl.hidden=true}
-function interact(){if(pcOpen)return;
+function interact(){if(pcOpen)return;const w=watchable();if(w){openWatch(w);return}
   const sp=seatNear();if(sp){P.sit=true;P.x=sp.x;P.y=sp.y;P.f='u';sendPresence(true);return}
   const it=nearest();if(!it)return;
   if(P.sit&&it.chair){openPC(it);return}
@@ -524,7 +541,7 @@ function frame(t){
   const near=nearest();
   if(talk&&talk.it!==near)talk=null;
   if(chat&&chat.it!==near)closeChat();
-  msg.textContent=talk?talk.it.n+': '+talk.line:P.sit?'Sitting. Press E to use the computer, or move to stand up.':seatNear()?'Press E or tap Talk to sit down.':near?'Press E or tap Talk: '+near.n:'Walk around with WASD, arrow keys, or the buttons below.';
+  msg.textContent=talk?talk.it.n+': '+talk.line:watchable()?'Press E or tap Talk to watch '+watchable().name+'’s screen.':P.sit?'Sitting. Press E to use the computer, or move to stand up.':seatNear()?'Press E or tap Talk to sit down.':near?'Press E or tap Talk: '+near.n:'Walk around with WASD, arrow keys, or the buttons on the screen.';
   const ov=others();lastOv=ov;npcOff(ov);quizTick(ov);who.textContent=room?(ov.length?(ov.length+1)+' players here':'Just you (share to play together)'):'Solo';
   drawFloor();drawWalls();
   items.filter(i=>i.k!=='npc').forEach(drawItem);
