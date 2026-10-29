@@ -10,77 +10,88 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a18;--fg:#e4ede9;--card:#1c2825;--line:#33443f;--accent:#6fc2a3;--accent-fg:#10201a}}
 :root[data-theme="dark"]{--bg:#121a18;--fg:#e4ede9;--card:#1c2825;--line:#33443f;--accent:#6fc2a3;--accent-fg:#10201a}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.45}
-.wrap{max-width:720px;margin:0 auto;padding:14px;display:flex;flex-direction:column}
-h1{order:0}.top{order:1}#lobby,#door{order:2}#c{order:3;aspect-ratio:640/448}.pad{order:4}#quiz,#ed{order:5}#msg{order:6}#chat{order:7}#sayrow{order:8}#lb{order:9}.hint{order:10}
-button{touch-action:manipulation;-webkit-touch-callout:none}
-h1{font-size:1.25rem;margin:0 0 8px}
-.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
-input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);min-width:0}
-#nick{width:140px}
-.sw{display:flex;gap:5px}
-.sw button{width:26px;height:26px;border-radius:50%;padding:0;border:2px solid transparent}
-.sw button[aria-pressed="true"]{border-color:var(--fg)}
-#who{margin-left:auto;font-size:.85rem;opacity:.85}
-canvas{display:block;width:100%;height:auto;border-radius:10px;border:2px solid var(--line);background:#222;image-rendering:pixelated;touch-action:none}
-#msg,#chat{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--chalk);border-radius:8px;padding:10px 12px;font-size:.95rem;margin-top:8px}
-#msg{min-height:3.2em}
-#log{max-height:150px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
-#log b{margin-right:6px}
-.row{display:flex;gap:6px}.row input{flex:1}
-button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;cursor:pointer}
-button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.row button{padding:6px 12px}#send{background:var(--accent);color:var(--accent-fg);border:none}
-.pad{display:flex;justify-content:space-between;align-items:center;margin-top:12px;user-select:none;-webkit-user-select:none}
-.dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,56px);gap:6px}
-.dpad button{font-size:1.2rem;touch-action:none}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;line-height:1.4}
+[hidden],.hide{display:none!important}
+.app{max-width:1120px;margin:0 auto;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;gap:8px;align-items:center}.top h1{font-size:1.05rem;margin:0 8px 0 0}#nick{width:150px}#who{margin-left:auto;font-size:.85rem;opacity:.85}
+input,select{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);min-width:0}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;cursor:pointer;touch-action:manipulation;-webkit-touch-callout:none}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.game{display:grid;grid-template-columns:minmax(0,680px) minmax(290px,1fr);gap:12px;align-items:start}
+.stage{display:flex;flex-direction:column;gap:8px}
+canvas{display:block;width:100%;height:auto;aspect-ratio:640/448;border-radius:10px;border:2px solid var(--line);background:#222;touch-action:none}
+.ctrl{display:flex;gap:8px;align-items:stretch;user-select:none;-webkit-user-select:none}.cr{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+#msg{flex:1;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--chalk);border-radius:8px;padding:6px 10px;font-size:.9rem;display:flex;align-items:center}
+.dpad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,46px);gap:5px}.dpad button{font-size:1.1rem;touch-action:none}
 .up{grid-column:2;grid-row:1}.left{grid-column:1;grid-row:2}.down{grid-column:2;grid-row:2}.right{grid-column:3;grid-row:2}
-#talk{width:96px;height:96px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-weight:700;border:none;touch-action:none}
-.hint{font-size:.8rem;opacity:.75;margin-top:8px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:8px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.card button{padding:6px 12px}.hide{display:none!important}#code{width:90px;text-transform:uppercase}
+#talk{height:44px;border-radius:12px;background:var(--accent);color:var(--accent-fg);font-weight:700;border:none;touch-action:none}
+@media (hover:hover) and (pointer:fine){.dpad,#talk{display:none}}
+.side{display:flex;flex-direction:column;gap:8px;min-height:0;max-height:calc(100vh - 62px);max-height:calc(100dvh - 62px)}
+.tabs{display:flex;gap:4px}.tabs button{flex:1;padding:8px 2px;font-weight:700}.tabs button[aria-selected=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.panes{flex:1;min-height:0;overflow:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:0 0 8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.card button{padding:6px 12px}#code{width:90px;text-transform:uppercase}
+.sw{display:flex;gap:5px;flex-wrap:wrap}.sw button{width:28px;height:28px;border-radius:50%;padding:0;border:2px solid transparent}.sw button[aria-pressed="true"]{border-color:var(--fg)}
+#chat{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--chalk);border-radius:8px;padding:10px 12px;font-size:.95rem;margin-bottom:8px}
+#log{max-height:40vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:8px}#log b{margin-right:6px}
+.row{display:flex;gap:6px}.row input{flex:1}.row button{padding:6px 12px}#send{background:var(--accent);color:var(--accent-fg);border:none}
 .opt{flex:1 1 45%;text-align:left;padding:8px!important}.opt.sel{outline:3px solid var(--accent)}.opt.ok{background:#3f9a54;color:#fff}.opt.no{background:#c0392b;color:#fff}
 #qt{width:100%;font-weight:700}#qo,#qh{display:flex;flex-wrap:wrap;gap:6px;width:100%}#qs,#qe,#lb{width:100%;font-size:.9rem}
-@media (max-width:600px){
- h1,.hint{display:none}.wrap{padding:8px}input,select{font-size:16px}.card button,.row button{min-height:40px}
- .dpad{grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,48px)}#talk{width:84px;height:84px}.pad{margin-top:8px}#log{max-height:110px}.opt{min-height:44px}
+.hint{font-size:.8rem;opacity:.75}
+@media (max-width:760px){
+ body{overflow:hidden}.app{height:100vh;height:100dvh;padding:6px 8px;gap:6px}.top h1{display:none}#nick{flex:1}input,select{font-size:16px}
+ .game{flex:1;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:6px}.side{max-height:none;height:100%}.card button,.row button{min-height:40px}.opt{min-height:44px}
+}
+@media (orientation:landscape) and (max-height:560px){
+ .app{height:100vh;height:100dvh;padding:4px 8px;gap:4px}.top h1{display:none}.top{margin-bottom:0}
+ .game{flex:1;min-height:0;grid-template-columns:auto minmax(200px,1fr);grid-template-rows:auto minmax(0,1fr);gap:6px 8px}
+ .stage{display:contents}#c{grid-column:1;grid-row:1/span 2;width:auto;height:min(calc(100vh - 54px),39vw);height:min(calc(100dvh - 54px),39vw)}
+ .ctrl{grid-column:2;grid-row:1}.side{grid-column:2;grid-row:2;max-height:none;height:100%}
+ .dpad{grid-template-columns:repeat(3,40px);grid-template-rows:repeat(2,40px)}#talk{height:36px}#msg{font-size:.78rem;padding:4px 8px}
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Computer Classroom</h1>
-  <div class="top">
-    <input id="nick" maxlength="14" placeholder="Your name" aria-label="Your name">
-    <div class="sw" id="sw" role="group" aria-label="Shirt color"></div>
-    <button id="hair" style="padding:5px 10px">Hair</button><button id="lang" style="padding:5px 10px"></button><button id="aib" style="padding:5px 10px">AI banter: off</button><span id="who">Solo</span>
-  </div>
-  <div class="card" id="lobby"><button id="host">Host a class</button><input id="code" maxlength="5" placeholder="CODE" aria-label="Class code"><button id="join">Join</button><span id="rm" style="font-size:.9rem"></span></div>
-  <div class="card hide" id="door" aria-live="polite"></div>
-  <canvas id="c" width="640" height="448" aria-label="Top-down view of a classroom with computers on the desks"></canvas>
-  <div id="chat" hidden>
-    <div id="log" aria-live="polite"></div>
-    <div class="row"><input id="inp" maxlength="200" placeholder="Say something…" autocomplete="off" aria-label="Your message"><button id="send">Send</button><button id="close">Close</button></div>
-  </div>
-  <div class="card" id="quiz"><div id="qt"></div><div id="qo"></div><div id="qs"></div><div id="qe"></div>
-    <div id="qh" class="hide"><select id="mod" aria-label="Module"><option value="0">Modules 5-8</option><option value="5">Module 5</option><option value="6">Module 6</option><option value="7">Module 7</option><option value="8">Module 8</option><option value="9">My questions</option></select><input id="tm" type="number" min="5" max="120" value="20" style="width:64px" aria-label="Seconds per question"><button id="st">Start quiz</button><button id="nx">Next</button><button id="rv">Reveal</button><button id="en">End</button></div></div>
-  <div class="card hide" id="ed"><button id="etog">✏️ Make your own questions (<span id="ecount">0</span>)</button>
-    <div id="eb" class="hide" style="width:100%;display:flex;flex-direction:column;gap:6px"><input id="eq" maxlength="140" placeholder="Question"><input id="e0" maxlength="50" placeholder="Answer A"><input id="e1" maxlength="50" placeholder="Answer B"><input id="e2" maxlength="50" placeholder="Answer C"><input id="e3" maxlength="50" placeholder="Answer D">
-    <select id="ea"><option value="0">Correct: A</option><option value="1">Correct: B</option><option value="2">Correct: C</option><option value="3">Correct: D</option></select><input id="ee" maxlength="120" placeholder="Explanation (optional)"><button id="eadd">Add question</button><span id="em"></span><div id="el"></div></div></div>
-  <div class="card" id="lb"></div>
-  <div id="msg" aria-live="polite"></div>
-  <div class="row" id="sayrow" style="margin-top:8px"><input id="say" maxlength="60" placeholder="Say to everyone nearby…" aria-label="Say to other players"><button id="sayb">Say</button><button class="em" aria-label="Wave">👋</button><button class="em" aria-label="Laugh">😂</button><button class="em" aria-label="Question">❓</button></div>
-  <div class="pad">
-    <div class="dpad">
+<div class="app">
+  <header class="top"><h1>Computer Classroom</h1><input id="nick" maxlength="14" placeholder="Your name" aria-label="Your name"><span id="who">Solo</span></header>
+  <main class="game">
+    <section class="stage">
+      <canvas id="c" width="640" height="448" aria-label="Top-down view of a classroom with computers on the desks"></canvas>
+      <div class="pad ctrl">
+        <div class="dpad">
       <button class="up" data-d="up" aria-label="Up">▲</button>
       <button class="left" data-d="left" aria-label="Left">◀</button>
       <button class="down" data-d="down" aria-label="Down">▼</button>
       <button class="right" data-d="right" aria-label="Right">▶</button>
     </div>
-    <button id="talk">Talk</button>
+    <div class="cr"><div id="msg" aria-live="polite"></div><button id="talk">Talk</button></div>
+      </div>
+    </section>
+    <aside class="side">
+      <div class="card hide" id="door" aria-live="polite"></div>
+      <nav class="tabs" role="tablist"><button role="tab" data-tab="quiz">Quiz</button><button role="tab" data-tab="class">Class <span id="tbadge"></span></button><button role="tab" data-tab="chat">Chat</button><button role="tab" data-tab="you">You</button></nav>
+      <div class="panes">
+        <section data-pane="quiz" role="tabpanel"><div class="card" id="quiz"><div id="qt"></div><div id="qo"></div><div id="qs"></div><div id="qe"></div>
+    <div id="qh" class="hide"><select id="mod" aria-label="Module"><option value="0">Modules 5-8</option><option value="5">Module 5</option><option value="6">Module 6</option><option value="7">Module 7</option><option value="8">Module 8</option><option value="9">My questions</option></select><input id="tm" type="number" min="5" max="120" value="20" style="width:64px" aria-label="Seconds per question"><button id="st">Start quiz</button><button id="nx">Next</button><button id="rv">Reveal</button><button id="en">End</button></div></div>
+  <div class="card hide" id="ed"><button id="etog">✏️ Make your own questions (<span id="ecount">0</span>)</button>
+    <div id="eb" class="hide" style="width:100%;display:flex;flex-direction:column;gap:6px"><input id="eq" maxlength="140" placeholder="Question"><input id="e0" maxlength="50" placeholder="Answer A"><input id="e1" maxlength="50" placeholder="Answer B"><input id="e2" maxlength="50" placeholder="Answer C"><input id="e3" maxlength="50" placeholder="Answer D">
+    <select id="ea"><option value="0">Correct: A</option><option value="1">Correct: B</option><option value="2">Correct: C</option><option value="3">Correct: D</option></select><input id="ee" maxlength="120" placeholder="Explanation (optional)"><button id="eadd">Add question</button><span id="em"></span><div id="el"></div></div></div>
+  </section>
+        <section data-pane="class" role="tabpanel"><div class="card" id="lobby"><button id="host">Host a class</button><input id="code" maxlength="5" placeholder="CODE" aria-label="Class code"><button id="join">Join</button><span id="rm" style="font-size:.9rem"></span></div>
+  <div class="card" id="lb"></div></section>
+        <section data-pane="chat" role="tabpanel"><div id="chat" hidden>
+    <div id="log" aria-live="polite"></div>
+    <div class="row"><input id="inp" maxlength="200" placeholder="Say something…" autocomplete="off" aria-label="Your message"><button id="send">Send</button><button id="close">Close</button></div>
   </div>
-  <p class="hint">Move: WASD or arrows. Talk or look: E. Host a class and share the code or the page link. The host is the teacher and runs the quiz. Ms. Reyes, Mia and Jon only show up when you are alone.</p>
+  <div class="row" id="sayrow" style="margin-top:8px"><input id="say" maxlength="60" placeholder="Say to everyone nearby…" aria-label="Say to other players"><button id="sayb">Say</button><button class="em" aria-label="Wave">👋</button><button class="em" aria-label="Laugh">😂</button><button class="em" aria-label="Question">❓</button></div>
+  </section>
+        <section data-pane="you" role="tabpanel"><div class="card"><span>Shirt</span><div class="sw" id="sw" role="group" aria-label="Shirt color"></div><button id="hair">Hair</button><button id="lang"></button><button id="aib">AI banter: off</button></div>
+          <p class="hint">Move: WASD or arrows. Talk, sit or use a computer: E. Host a class and share the code or the page link; the host is the teacher and runs the quiz. Ms. Reyes, Mia and Jon only show up when you are alone.</p></section>
+      </div>
+    </aside>
+  </main>
 </div>
+
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),$=id=>document.getElementById(id);
 const msg=$('msg'),chatEl=$('chat'),logEl=$('log'),inp=$('inp'),nick=$('nick'),who=$('who');
@@ -104,7 +115,7 @@ add({n:'Ms. Reyes (Teacher)',x:310,y:118,w:20,h:20,k:'npc',ci:0,solid:1,ai:{pers
 add({n:'Mia (Classmate)',x:560,y:210,w:20,h:20,k:'npc',ci:1,solid:1,ai:{persona:'You are Mia, a friendly, curious 2nd-year BSIT student who loves coding and gossips a little about deadlines, org events and the canteen.',greet:{en:'Hi! Did you finish the Python activity yet?',tl:'Uy! Tapos mo na ba yung Python activity?'}},lines:['Hi!']});
 add({n:'Jon (Classmate)',x:62,y:330,w:20,h:20,k:'npc',ci:3,solid:1,ai:{persona:'You are Jon, a funny but kind college student who jokes a lot, loves mobile games, is always puyat from gaming, and procrastinates on requirements.',greet:{en:'Shh, I’m pretending to work. What’s up?',tl:'Shh, nagpapanggap akong nagko-code. Ano meron?'}},lines:['Hey.']});
 
-const deskTxt=['Typing practice: 42 words per minute. Not bad!','A spreadsheet of lunch orders. Pizza is winning.','A paint program with a half-drawn rocket ship.','A quiz website. Question 3 is unanswered.','The browser is on a page about volcanoes.','A coding game: level 5, “Make the robot walk.”','Someone left a chat window open. It says “brb.”','A slideshow about dinosaurs. Slide 1 is perfect.','The screen is asleep. Wiggle the mouse?','A music player paused on a calm song.','A folder named “Homework FINAL final v2.”','A calculator app showing 8008135. Very mature.'];
+const deskTxt=['Typing practice: 42 words per minute. Not bad!','A spreadsheet of lunch orders. Pizza is winning.','A paint program with a half-drawn rocket ship.','A quiz website. Question 3 is unanswered.','The browser is on a page about volcanoes.','A coding game: level 5, “Make the robot walk.”','Someone left a chat window open. It says “brb.”','A slideshow about dinosaurs. Slide 1 is perfect.','The screen is asleep. Wiggle the mouse?','A music player paused on a calm song.','A folder named “Homework FINAL final v2.”','A calculator app with a half-finished homework answer.'];
 let di=0;
 for(const y of [170,246,322])for(const x of [108,224,340,456]){add({n:'Computer '+(di+1),x,y,w:76,h:30,k:'desk',c:'#9a6a35',solid:1,sc:di%4,chair:1,lines:[deskTxt[di%deskTxt.length]]});di++}
 
@@ -163,14 +174,14 @@ let talk=null,idx={},chat=null,sampleFn=null,aiOk=false,AIB=false,aiCalls=0,last
 const npcs=items.filter(i=>i.k==='npc'),nm=n=>n.n.split(' (')[0],heard=[];
 const CANNED={tl:[
 [['Mia','Uy, natapos mo na ba yung Python activity?'],['Jon','Hindi pa. Bahala na si Lord.'],['Ms. Reyes','Jon, deadline na mamaya ha.']],
-[['Jon','Mia, tingnan mo calculator ko, 8008135.'],['Mia','Jon, grow up nga.'],['Jon','Ayoko.']],
+[['Jon','Mia, may bagong meme sa group chat natin.'],['Mia','Jon, aral muna bago meme.'],['Jon','Bukas na lang.']],
 [['Ms. Reyes','Sino nag-iwan ng chat window na bukas?'],['Mia','Hindi ako yan, Ma’am!'],['Jon','Baka ako nga po.']],
 [['Mia','Ang bagal ng Wi-Fi natin, kainis.'],['Ms. Reyes','I-restart mo muna yung browser, Mia.']],
 [['Jon','Ma’am, pwede maglaro ng coding game after?'],['Ms. Reyes','Tapusin muna yung midterm review, Jon.']],
 [['Mia','Anong review natin? Modules 5 to 8?'],['Jon','Oo, recursion pa lang takot na ako.'],['Mia','Base case lang naman yan, gets mo?']]],
 en:[
 [['Mia','Did you finish the Python activity yet?'],['Jon','Not yet. Bahala na.'],['Ms. Reyes','The deadline is tonight, Jon.']],
-[['Jon','Mia, look, my calculator says 8008135.'],['Mia','Jon. Please grow up.'],['Jon','Never.']],
+[['Jon','Mia, there is a new meme in the group chat.'],['Mia','Jon, study first, meme later.'],['Jon','Tomorrow, then.']],
 [['Ms. Reyes','Who left the chat window open again?'],['Mia','Not me, Ma’am!'],['Jon','Maybe me.']],
 [['Mia','This Wi-Fi is slower than my cat.'],['Ms. Reyes','Restart your browser first, Mia.']],
 [['Mia','Recursion scares me.'],['Jon','Same. Just remember the base case.']]]};
@@ -266,7 +277,7 @@ function quizTick(ov){
   const hp=ov.filter(o=>o.h).sort((a,b)=>a.id<b.id?-1:1)[0];
   const S=(!room||G.host)?G:hp?hp:{qn:-2,qi:-1,ph:'idle'};
   ['quiz','sayrow','lb'].forEach(i=>$(i).classList.toggle('hide',!!DOOR.wait));$('qh').classList.toggle('hide',!hostCtl());curQn=S.qn;$('ed').classList.toggle('hide',!hostCtl()||!!DOOR.wait);if(S.rs!==undefined&&S.rs!==lastRs){lastRs=S.rs;G.score=0;sendPresence(true)}
-  if(S.qn!==lastQn){lastQn=S.qn;t0=performance.now();myAns=-1;done=false;renderQ(S)}
+  if(S.qn!==lastQn){lastQn=S.qn;t0=performance.now();myAns=-1;done=false;renderQ(S);if(curQ(S)||S.ph==='end')setTab('quiz')}
   curPh=S.ph;if(S.ph==='end')return;const q=curQ(S);if(!q)return;const left=Math.max(0,(S.tm||20)-(performance.now()-t0)/1000),rev=S.ph==='show'||left<=0;
   if(rev&&!done){done=true;const pts=100+Math.round(left*5);if(myAns===q[3])G.score+=pts;sendPresence(true);showRev(q,pts)}
   $('qs').textContent=rev?'':'Time left: '+Math.ceil(left)+'s'}
@@ -331,6 +342,11 @@ async function react(from,said,reply){
   reactCalls++;
   try{const r=await sampleFn(o.ai.persona+' '+langRule()+' You overheard this in class. A student said to '+nm(from)+': "'+said+'". '+nm(from)+' answered: "'+reply+'". React in character with ONE short sentence, as if you heard it nearby. No markdown.',{modelTier:'quick',cache:false});
    const t=r.text.trim().slice(0,100);speak(o,t,5500);heard.push(nm(o)+' (reacting): '+t)}catch(e){canned()}}
+/* tabs */
+let tab='class',wasChat=false;
+function setTab(t){tab=t;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));document.querySelectorAll('[data-pane]').forEach(p=>p.classList.toggle('hide',p.dataset.pane!==t))}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));setTab('class');
+setInterval(()=>{if(chat&&!wasChat)setTab('chat');wasChat=!!chat;const n=DOOR.waiting.length;$('tbadge').textContent=n?'('+n+')':''},300);
 /* drawing */
 function drawChar(px,py,o){
   if(o.name&&o.an===curQn&&curQn>0)o={...o,name:o.name+' ✓'};if(o.h)o={...o,hs:2,ac:'glasses',cl:'#8a5cc4',name:(o.name||'')+' (T)'};
@@ -363,7 +379,8 @@ function flushBubbles(){ctx.font='bold '+fs+'px Trebuchet MS, sans-serif';ctx.te
    ctx.fillStyle='#fffdf4';ctx.strokeStyle='#3a3a3a';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(bx,by,w,h,6);ctx.fill();ctx.stroke();
    ctx.beginPath();ctx.moveTo(b.x-4,by+h-1);ctx.lineTo(b.x,by+h+5);ctx.lineTo(b.x+4,by+h-1);ctx.fill();
    ctx.fillStyle='#222';L.forEach((q,i)=>ctx.fillText(q,bx+w/2,by+3+fs+i*(fs+2)))}BUB.length=0}
-function drawFloor(){fs=Math.max(10,Math.min(17,Math.round(9/((cv.clientWidth||640)/640))));
+function fit(){const k=Math.max(1,Math.min(3,(cv.clientWidth/640)*(devicePixelRatio||1))),w=Math.round(640*k),h=Math.round(448*k);if(cv.width!==w){cv.width=w;cv.height=h}ctx.setTransform(w/640,0,0,h/448,0,0)}
+function drawFloor(){fit();fs=Math.max(10,Math.min(17,Math.round(9/((cv.clientWidth||640)/640))));
   for(let ty=0;ty<14;ty++)for(let tx=0;tx<20;tx++){ctx.fillStyle=((tx+ty)&1)?SCENE.floor[0]:SCENE.floor[1];ctx.fillRect(tx*32,ty*32,32,32);ctx.fillStyle='rgba(90,55,20,.12)';ctx.fillRect(tx*32,ty*32+8+((tx*7+ty*3)%3)*8,32,1)}
   ctx.fillStyle=SCENE.rug;ctx.fillRect(238,110,164,50);ctx.strokeStyle='#e8d9a8';ctx.lineWidth=2;ctx.strokeRect(244,116,152,38)}
 function drawWalls(){
